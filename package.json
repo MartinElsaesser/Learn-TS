@@ -1,21 +1,22 @@
 {
-  "name": "learn-ts",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "devDependencies": {
-    "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
-  },
-  "dependencies": {
-    "expect-type": "^1.2.2",
-    "prettier": "^3.6.2"
-  }
+	"name": "learn-ts",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"prettier:fix": "prettier --write .",
+		"prettier:check": "prettier --check ."
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"type": "module",
+	"devDependencies": {
+		"tsx": "^4.20.5",
+		"typescript": "^5.9.2"
+	},
+	"dependencies": {
+		"expect-type": "^1.2.2",
+		"prettier": "^3.6.2"
+	}
 }
