@@ -1,0 +1,16 @@
+function MyCapitalize2(T extends string, TLast extends string = "") {
+	if (T extends `${infer First}${infer Rest}`) {
+		// T.length >= 1
+		if(TLast extends "") { // start of string
+			return `${Uppercase<First>}${MyCapitalize2<Rest, First>}`;
+		} else if (TLast extends " ") {
+			return `${Uppercase<First>}${MyCapitalize2<Rest, First>}`;
+		} else {
+			return `${First}${MyCapitalize2<Rest, First>}`;
+		}
+
+	} else {
+		// T.length == 0
+		return "";
+	}
+}
