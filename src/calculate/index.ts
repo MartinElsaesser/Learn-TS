@@ -26,4 +26,6 @@ type Mult<A extends number, B extends number> = (MultT<Num<A>, Num<B>> & number[
 type DivT<A extends number[], B extends number[], TRes extends number[] = []> =
 	MultT<TRes, B> extends A ? TRes : DivT<A, B, AddT<[0], TRes>>;
 
+type Div<A extends number, B extends number> = (DivT<Num<A>, Num<B>> & number[])["length"];
+
 type calc = Add<Mult<2, 3>, 7>; // 2*3 +7
