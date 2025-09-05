@@ -2,7 +2,7 @@ function CapitalizeRest(T extends string) {
   if (T extends `${infer First}${infer Second}${infer Rest}`) {
 	// T.length >=2
 	if(First extends " ") {
-		return `${First}${Uppercase<Second>}${CapitalizeRest<Rest>}`;
+		return `${First}${CapitalizeRest<`${Uppercase<Second>}${Rest}`>}`;
 	} else {
 		return `${First}${CapitalizeRest<`${Second}${Rest}`>}`;
 	}
