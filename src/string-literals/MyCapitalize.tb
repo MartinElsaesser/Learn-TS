@@ -1,0 +1,30 @@
+function CapitalizeRest(T extends string) {
+  if (T extends `${infer First}${infer Second}${infer Rest}`) {
+	// T.length >=2
+	if(First extends " ") {
+		return `${First}${Uppercase<Second>}${CapitalizeRest<Rest>}`;
+	} else {
+		return `${First}${CapitalizeRest<`${Second}${Rest}`>}`;
+	}
+  } else if(T extends `${infer First}${infer Rest}`) {
+	// T.length == 1
+	return First;
+  } else {
+	// T.length == 0
+    return "";
+  }
+}
+
+function MyCapitalize(T extends string) {
+  if(T extends `${infer First}${infer Rest}`) {
+	// T.length >= 1
+	if(First extends " ") {
+		return `${CapitalizeRest<T>}`;
+	} else {
+		return `${Capitalize<First>}${CapitalizeRest<Rest>}`;
+	}
+  } else {
+	// T.length == 0
+    return "";
+  }
+}
