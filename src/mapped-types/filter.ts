@@ -28,3 +28,15 @@ type KeepColors<TObj, TColor extends string> = {
 	[TKey in keyof TObj as KeepColor<TKey, TColor>]: TObj[TKey];
 };
 type Colors = KeepColors<ColorConfig, "red">;
+
+// Filter undefined values
+type FilterUndefined<Key, Val> = undefined extends Val ? never : Key;
+type FilterUndefinedProps<TObj> = {
+	[TKey in keyof TObj as FilterUndefined<TKey, TObj[TKey]>]: TObj[TKey];
+};
+
+type T = FilterUndefinedProps<{
+	a: string;
+	b: undefined;
+	c?: number;
+}>;
