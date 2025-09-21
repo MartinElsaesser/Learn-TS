@@ -1,17 +1,19 @@
 import { expectTypeOf } from "expect-type";
-type MyCapitalize4<T extends string> =
-	T extends `${infer First} ${infer Rest}` ? `${Capitalize<First>} ${MyCapitalize4<Rest>}`
+type CapitalizeWords<T extends string> =
+	T extends `${infer First} ${infer Rest}` ? `${Capitalize<First>} ${CapitalizeWords<Rest>}`
 	:	Capitalize<T>;
-type capitalized = MyCapitalize4<"lorem, ipsum. dolor sit  a">;
+type capitalized = CapitalizeWords<"lorem, ipsum. dolor sit  a">;
 
-expectTypeOf<"A">().toEqualTypeOf<MyCapitalize4<"a">>();
-expectTypeOf<"A B">().toEqualTypeOf<MyCapitalize4<"a b">>();
-expectTypeOf<" A B">().toEqualTypeOf<MyCapitalize4<" a b">>();
-expectTypeOf<"Be">().toEqualTypeOf<MyCapitalize4<"be">>();
-expectTypeOf<"Three">().toEqualTypeOf<MyCapitalize4<"three">>();
-expectTypeOf<" Space">().toEqualTypeOf<MyCapitalize4<" space">>();
-expectTypeOf<"   Spaces ">().toEqualTypeOf<MyCapitalize4<"   spaces ">>();
+expectTypeOf<"A">().toEqualTypeOf<CapitalizeWords<"a">>();
+expectTypeOf<"A B">().toEqualTypeOf<CapitalizeWords<"a b">>();
+expectTypeOf<" A B">().toEqualTypeOf<CapitalizeWords<" a b">>();
+expectTypeOf<"Be">().toEqualTypeOf<CapitalizeWords<"be">>();
+expectTypeOf<"Three">().toEqualTypeOf<CapitalizeWords<"three">>();
+expectTypeOf<" Space">().toEqualTypeOf<CapitalizeWords<" space">>();
+expectTypeOf<"   Spaces ">().toEqualTypeOf<CapitalizeWords<"   spaces ">>();
 expectTypeOf<"Lorem, Ipsum. Dolor  Sit Amet.">().toEqualTypeOf<
-	MyCapitalize4<"lorem, ipsum. dolor  sit amet.">
+	CapitalizeWords<"lorem, ipsum. dolor  sit amet.">
 >();
-expectTypeOf<"">().toEqualTypeOf<MyCapitalize4<"">>();
+expectTypeOf<"">().toEqualTypeOf<CapitalizeWords<"">>();
+
+type a = Promise<string>;
