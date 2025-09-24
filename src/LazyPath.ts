@@ -90,12 +90,13 @@ type LazyPath<
 	Obj,
 	PathSegments extends string[] = ParsePreviousPathSegments<Path>,
 	JoinedPathSegments extends string = JoinArr<PathSegments>,
+	ResolvedObj = ResolveObjPath<PathSegments, Obj>,
 > =
-	ResolveObjPath<PathSegments, Obj> extends never ? "Error (no further path)"
-	: ResolveObjPath<PathSegments, Obj> extends object ?
-		ResolveObjPath<PathSegments, Obj> extends any[] ?
+	ResolvedObj extends never ? "Error (no further path)"
+	: ResolvedObj extends object ?
+		ResolvedObj extends any[] ?
 			Join<JoinedPathSegments, `${number}`, ".">
-		:	Join<JoinedPathSegments, Cast<keyof ResolveObjPath<PathSegments, Obj>, string>, ".">
+		:	Join<JoinedPathSegments, Cast<keyof ResolvedObj, string>, ".">
 	:	"Error (no further path)";
 
 type Cast<T, U> = T extends U ? T : U;
