@@ -44,27 +44,35 @@ type Person = {
 
 type ParsePropertyPath<S extends string> =
 	S extends `${infer Prev}.${infer Rest}` ? [Prev, ...ParsePropertyPath<Rest>] : [];
+type LastPropertyPath<S extends string> =
+	S extends `${infer Prev}.${infer Rest}` ? LastPropertyPath<Rest> : S;
 type Cast<T, U> = T extends U ? T : U;
 
 type IntersectionMerge<T, Intersection, Condition extends boolean> =
 	Condition extends true ? T | Intersection : Intersection;
 
+type IsValidNumeric<String> =
+	String extends `${number}` ? true
+	: String extends number ? true
+	: String extends "" ? true
+	: false;
 type LazyPropertyPath<
 	Obj,
 	Path extends string,
 	Properties extends Property[] = ParsePropertyPath<Path>,
 	ResolvedObj = GetObjectFromProperties<Obj, Properties>,
+	PathEndsOnDot extends boolean = EndsOn<Path, ".">,
+	IsNum extends boolean = IsValidNumeric<Cast<LastPropertyPath<Path>, string>>,
 > =
-	[ResolvedObj] extends [never] ? "Error (no further path)"
+	[ResolvedObj] extends [never] ? "Access error: cannot access this path"
+	: ResolvedObj extends any[] ?
+		IsNum extends true ?
+			IntersectionMerge<Path, JoinProperties<[...Properties, number]>, PathEndsOnDot>
+		:	"Index error: tried to index an array element through a string"
 	:	IntersectionMerge<
 			Path,
-			JoinProperties<
-				[
-					...Properties,
-					ResolvedObj extends any[] ? number : Cast<keyof ResolvedObj, string>,
-				]
-			>,
-			EndsOn<Path, ".">
+			JoinProperties<[...Properties, Cast<keyof ResolvedObj, string>]>,
+			PathEndsOnDot
 		>;
 
 type DebugLazyPropertyPath<
@@ -72,32 +80,21 @@ type DebugLazyPropertyPath<
 	Path extends string,
 	Properties extends Property[] = ParsePropertyPath<Path>,
 	ResolvedObj = GetObjectFromProperties<Obj, Properties>,
+	PathEndsOnDot extends boolean = EndsOn<Path, ".">,
 > = {
 	Properties: Properties;
 	ResolvedObj: ResolvedObj;
 	Return: LazyPropertyPath<Obj, Path>;
+	PathEndsOnDot: PathEndsOnDot;
 	Condition: EndsOn<Path, ".">;
 };
 /*   DEBUGGING   */
 
-type path = "roles.0";
-type _t = LazyPropertyPath<Person, path>;
-type endsOn = EndsOn<path, ".">;
-//   ^?
+type path = "roles.a";
+type _0 = LazyPropertyPath<Person, path>;
 type _1 = DebugLazyPropertyPath<Person, path>;
 
-type DebugProperties = _1["Properties"];
-//   ^?
-type DebugResolvedObj = _1["ResolvedObj"];
-//   ^?
-type DebugReturn = _1["Return"];
-//   ^?
-
 /*   IMPLEMENTATION   */
-declare function get<path extends string, Obj>(
-	path: LazyPropertyPath<Obj, path>,
-	obj: Obj
-): LazyPropertyPath<Obj, path>;
 
 const person = {
 	favoritePet: {
@@ -113,7 +110,12 @@ const person = {
 	age: 30,
 } as const;
 
-const test2 = get("children.0.childAge", person);
+declare function get<path extends string, Obj>(
+	obj: Obj,
+	path: LazyPropertyPath<Obj, path>
+): LazyPropertyPath<Obj, path>;
+
+const test2 = get(person, "roles.0.");
 
 /*   TESTS   */
 // test ConcatStrings
@@ -121,6 +123,19 @@ expectTypeOf<"">().toEqualTypeOf<ConcatStrings<"", "", ".">>();
 expectTypeOf<"a">().toEqualTypeOf<ConcatStrings<"a", "", ".">>();
 expectTypeOf<"b">().toEqualTypeOf<ConcatStrings<"", "b", ".">>();
 expectTypeOf<"a.b">().toEqualTypeOf<ConcatStrings<"a", "b", ".">>();
+
+// test IsNumeric
+expectTypeOf<true>().toEqualTypeOf<IsValidNumeric<"0">>();
+expectTypeOf<true>().toEqualTypeOf<IsValidNumeric<"1">>();
+expectTypeOf<true>().toEqualTypeOf<IsValidNumeric<"1000">>();
+expectTypeOf<true>().toEqualTypeOf<IsValidNumeric<"-2">>();
+expectTypeOf<false>().toEqualTypeOf<IsValidNumeric<"a">>();
+expectTypeOf<false>().toEqualTypeOf<IsValidNumeric<"pet">>();
+
+// test LastPropertyPath
+expectTypeOf<"0">().toEqualTypeOf<LastPropertyPath<"0">>();
+expectTypeOf<"b">().toEqualTypeOf<LastPropertyPath<"a.b">>();
+expectTypeOf<"c">().toEqualTypeOf<LastPropertyPath<"a.b.c">>();
 
 // test JoinProperties
 expectTypeOf<"">().toEqualTypeOf<JoinProperties<[""]>>();
@@ -156,9 +171,6 @@ expectTypeOf<true>().toEqualTypeOf<EndsOn<"abc", "c">>();
 expectTypeOf<false>().toEqualTypeOf<EndsOn<"", "c">>();
 expectTypeOf<true>().toEqualTypeOf<EndsOn<"children.0.", ".">>();
 
-type t_string = "children.0.";
-type lastChar = t_string["endsWith"];
-
 // test LazyPropertyPath
 expectTypeOf<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
 	LazyPropertyPath<Person, "">
@@ -171,7 +183,12 @@ expectTypeOf<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().t
 >();
 expectTypeOf<`roles.${number}` | "roles.">().toEqualTypeOf<LazyPropertyPath<Person, "roles.">>();
 expectTypeOf<`roles.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "roles.0">>();
-expectTypeOf<"Error (no further path)">().toEqualTypeOf<LazyPropertyPath<Person, "roles.0.">>();
+expectTypeOf<`Index error: tried to index an array element through a string`>().toEqualTypeOf<
+	LazyPropertyPath<Person, "roles.a">
+>();
+expectTypeOf<"Access error: cannot access this path">().toEqualTypeOf<
+	LazyPropertyPath<Person, "roles.0.">
+>();
 expectTypeOf<`children.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "children.0">>();
 expectTypeOf<`children.0.childName` | `children.0.childAge` | "children.0.">().toEqualTypeOf<
 	LazyPropertyPath<Person, "children.0.">
@@ -179,7 +196,7 @@ expectTypeOf<`children.0.childName` | `children.0.childAge` | "children.0.">().t
 expectTypeOf<`children.0.childName` | `children.0.childAge`>().toEqualTypeOf<
 	LazyPropertyPath<Person, "children.0.childName">
 >();
-expectTypeOf<"Error (no further path)">().toEqualTypeOf<
+expectTypeOf<"Access error: cannot access this path">().toEqualTypeOf<
 	LazyPropertyPath<Person, "children.0.childName.">
 >();
 
