@@ -30,16 +30,6 @@ type EndsOn<S extends string, LastChar extends string> =
 		:	false
 	:	false;
 
-const person = {
-	favoritePet: {
-		petName: "Fido",
-		petAge: 4,
-	},
-	roles: ["admin", "user"],
-	children: [{ childName: "Alice", childAge: 5 }],
-	favoriteColor: "green",
-	age: 30,
-} as const;
 type Person = {
 	favoritePet: {
 		petName: "Fido";
@@ -91,13 +81,26 @@ type ParsePropertyPath<S extends string> =
 	:	[];
 type ParseNumberProperty<S extends string> = S extends `${number}` ? number : S;
 
+/*   IMPLEMENTATION   */
 declare function get<path extends string, Obj>(
 	path: LazyPropertyPath<NoInfer<path>, Obj> | path,
 	obj: Obj
 ): LazyPropertyPath<path, Obj>;
 
+const person = {
+	favoritePet: {
+		petName: "Fido",
+		petAge: 4,
+	},
+	roles: ["admin", "user"],
+	children: [{ childName: "Alice", childAge: 5 }],
+	favoriteColor: "green",
+	age: 30,
+} as const;
+
 const test2 = get("roles.", person);
 
+/*   TESTS   */
 // test ConcatStrings
 expectTypeOf<"">().toEqualTypeOf<ConcatStrings<"", "", ".">>();
 expectTypeOf<"a">().toEqualTypeOf<ConcatStrings<"a", "", ".">>();
