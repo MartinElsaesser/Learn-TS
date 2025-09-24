@@ -22,13 +22,14 @@ type GetObjectFromProperties<Obj, Properties extends Property[]> =
 			GetObjectFromProperties<Obj[F], R>
 		:	never
 	:	ReturnIfIsObject<Obj>;
-
+type GetLastChar<T extends string> =
+	T extends `${infer F}${infer R}` ?
+		R extends "" ?
+			F
+		:	GetLastChar<R>
+	:	never;
 type EndsOn<S extends string, LastChar extends string> =
-	S extends `${string}${LastChar}${infer Tail}` ?
-		Tail extends "" ?
-			true
-		:	false
-	:	false;
+	[GetLastChar<S>, LastChar] extends [LastChar, GetLastChar<S>] ? true : false;
 
 type Person = {
 	favoritePet: {
@@ -48,6 +49,9 @@ type ParsePropertyPath<S extends string> =
 type ParseNumberProperty<S extends string> = S extends `${number}` ? number : S;
 type Cast<T, U> = T extends U ? T : U;
 
+type IntersectionMerge<T, Intersection, Condition extends boolean> =
+	Condition extends true ? T | Intersection : Intersection;
+
 type LazyPropertyPath<
 	Obj,
 	Path extends string,
@@ -55,8 +59,15 @@ type LazyPropertyPath<
 	ResolvedObj = GetObjectFromProperties<Obj, Properties>,
 > =
 	[ResolvedObj] extends [never] ? "Error (no further path)"
-	:	JoinProperties<
-			[...Properties, ResolvedObj extends any[] ? number : Cast<keyof ResolvedObj, string>]
+	:	IntersectionMerge<
+			Path,
+			JoinProperties<
+				[
+					...Properties,
+					ResolvedObj extends any[] ? number : Cast<keyof ResolvedObj, string>,
+				]
+			>,
+			EndsOn<Path, ".">
 		>;
 
 type DebugLazyPropertyPath<
@@ -68,10 +79,15 @@ type DebugLazyPropertyPath<
 	Properties: Properties;
 	ResolvedObj: ResolvedObj;
 	Return: LazyPropertyPath<Obj, Path>;
+	Condition: EndsOn<Path, ".">;
 };
 /*   DEBUGGING   */
 
-type _1 = DebugLazyPropertyPath<Person, "favoritePet.petName">;
+type path = "children.0.";
+type _t = LazyPropertyPath<Person, path>;
+type endsOn = EndsOn<path, ".">;
+//   ^?
+type _1 = DebugLazyPropertyPath<Person, path>;
 
 type DebugProperties = _1["Properties"];
 //   ^?
@@ -138,6 +154,10 @@ expectTypeOf<false>().toEqualTypeOf<EndsOn<"abc", "a">>();
 expectTypeOf<true>().toEqualTypeOf<EndsOn<"a", "a">>();
 expectTypeOf<true>().toEqualTypeOf<EndsOn<"abc", "c">>();
 expectTypeOf<false>().toEqualTypeOf<EndsOn<"", "c">>();
+expectTypeOf<true>().toEqualTypeOf<EndsOn<"children.0.", ".">>();
+
+type t_string = "children.0.";
+type lastChar = t_string["endsWith"];
 
 // test LazyPropertyPath
 expectTypeOf<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
