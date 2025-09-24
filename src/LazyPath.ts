@@ -55,8 +55,9 @@ type LazyPropertyPath<
 	ResolvedObj = GetObjectFromProperties<Obj, Properties>,
 > =
 	[ResolvedObj] extends [never] ? "Error (no further path)"
-	: ResolvedObj extends any[] ? JoinProperties<[...Properties, number]>
-	: JoinProperties<[...Properties, Cast<keyof ResolvedObj, string>]>;
+	:	JoinProperties<
+			[...Properties, ResolvedObj extends any[] ? number : Cast<keyof ResolvedObj, string>]
+		>;
 
 type DebugLazyPropertyPath<
 	Obj,
@@ -73,8 +74,6 @@ type DebugLazyPropertyPath<
 type _1 = DebugLazyPropertyPath<Person, "favoritePet.petName">;
 
 type DebugProperties = _1["Properties"];
-//   ^?
-type DebugJoinedProperties = _1["JoinedProperties"];
 //   ^?
 type DebugResolvedObj = _1["ResolvedObj"];
 //   ^?
