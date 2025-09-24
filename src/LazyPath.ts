@@ -52,22 +52,19 @@ type LazyPropertyPath<
 	Obj,
 	Path extends string,
 	Properties extends Property[] = ParsePropertyPath<Path>,
-	JoinedProperties extends string = JoinProperties<Properties>,
 	ResolvedObj = GetObjectFromProperties<Obj, Properties>,
 > =
 	[ResolvedObj] extends [never] ? "Error (no further path)"
-	: ResolvedObj extends any[] ? ConcatStrings<JoinedProperties, `${number}`, ".">
-	: ConcatStrings<JoinedProperties, Cast<keyof ResolvedObj, string>, ".">;
+	: ResolvedObj extends any[] ? JoinProperties<[...Properties, number]>
+	: JoinProperties<[...Properties, Cast<keyof ResolvedObj, string>]>;
 
 type DebugLazyPropertyPath<
 	Obj,
 	Path extends string,
 	Properties extends Property[] = ParsePropertyPath<Path>,
-	JoinedProperties extends string = JoinProperties<Properties>,
 	ResolvedObj = GetObjectFromProperties<Obj, Properties>,
 > = {
 	Properties: Properties;
-	JoinedProperties: JoinedProperties;
 	ResolvedObj: ResolvedObj;
 	Return: LazyPropertyPath<Obj, Path>;
 };
@@ -86,7 +83,7 @@ type DebugReturn = _1["Return"];
 
 /*   IMPLEMENTATION   */
 declare function get<path extends string, Obj>(
-	path: LazyPropertyPath<Obj, NoInfer<path>> | path,
+	path: LazyPropertyPath<Obj, path>,
 	obj: Obj
 ): LazyPropertyPath<Obj, path>;
 
@@ -101,7 +98,7 @@ const person = {
 	age: 30,
 } as const;
 
-const test2 = get("roles.", person);
+const test2 = get("children", person);
 
 /*   TESTS   */
 // test ConcatStrings
