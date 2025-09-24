@@ -59,27 +59,30 @@ type LazyPropertyPath<
 	: ResolvedObj extends any[] ? ConcatStrings<JoinedProperties, `${number}`, ".">
 	: ConcatStrings<JoinedProperties, Cast<keyof ResolvedObj, string>, ".">;
 
+type DebugLazyPropertyPath<
+	Obj,
+	Path extends string,
+	Properties extends Property[] = ParsePropertyPath<Path>,
+	JoinedProperties extends string = JoinProperties<Properties>,
+	ResolvedObj = GetObjectFromProperties<Obj, Properties>,
+> = {
+	Properties: Properties;
+	JoinedProperties: JoinedProperties;
+	ResolvedObj: ResolvedObj;
+	Return: LazyPropertyPath<Obj, Path>;
+};
 /*   DEBUGGING   */
-type path = "roles.0.";
-type pathSegments = ParsePropertyPath<path>;
-//   ^?
-type joinedSegments = JoinProperties<pathSegments>;
-//   ^?
-type resolvedObj = GetObjectFromProperties<Person, pathSegments>;
-//   ^?
 
-type reconstructed =
-	//   ^?
-	resolvedObj extends never ? "Error (no further path)"
-	: resolvedObj extends object ?
-		resolvedObj extends any[] ?
-			ConcatStrings<joinedSegments, `${number}`, ".">
-		:	ConcatStrings<joinedSegments, Cast<keyof resolvedObj, string>, ".">
-	:	"Error (no further path)";
+type _1 = DebugLazyPropertyPath<Person, "favoritePet.petName">;
 
-type test = LazyPropertyPath<Person, path>;
+type DebugProperties = _1["Properties"];
 //   ^?
-type lel = ParsePropertyPath<"children.0.">;
+type DebugJoinedProperties = _1["JoinedProperties"];
+//   ^?
+type DebugResolvedObj = _1["ResolvedObj"];
+//   ^?
+type DebugReturn = _1["Return"];
+//   ^?
 
 /*   IMPLEMENTATION   */
 declare function get<path extends string, Obj>(
