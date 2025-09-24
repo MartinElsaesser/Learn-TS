@@ -16,10 +16,10 @@ type JoinProperties<Properties extends Property[]> =
 
 type ReturnIfIsObject<T> = T extends object ? T : never;
 
-type GetObjectFromProperties<Properties extends Property[], Obj> =
+type GetObjectFromProperties<Obj, Properties extends Property[]> =
 	Properties extends [infer F, ...infer R extends Property[]] ?
 		F extends keyof Obj ?
-			GetObjectFromProperties<R, Obj[F]>
+			GetObjectFromProperties<Obj[F], R>
 		:	never
 	:	ReturnIfIsObject<Obj>;
 
@@ -53,7 +53,7 @@ type LazyPropertyPath<
 	Obj,
 	Properties extends Property[] = ParsePropertyPath<Path>,
 	JoinedProperties extends string = JoinProperties<Properties>,
-	ResolvedObj = GetObjectFromProperties<Properties, Obj>,
+	ResolvedObj = GetObjectFromProperties<Obj, Properties>,
 > =
 	[ResolvedObj] extends [never] ? "Error (no further path)"
 	: ResolvedObj extends any[] ? ConcatStrings<JoinedProperties, `${number}`, ".">
@@ -65,7 +65,7 @@ type pathSegments = ParsePropertyPath<path>;
 //   ^?
 type joinedSegments = JoinProperties<pathSegments>;
 //   ^?
-type resolvedObj = GetObjectFromProperties<pathSegments, Person>;
+type resolvedObj = GetObjectFromProperties<Person, pathSegments>;
 //   ^?
 
 type reconstructed =
@@ -115,23 +115,23 @@ expectTypeOf<"a.b.c">().toEqualTypeOf<JoinProperties<["a", "b", "c"]>>();
 expectTypeOf<`a.${number}.c`>().toEqualTypeOf<JoinProperties<["a", number, "c"]>>();
 
 // test ResolveIndexable
-expectTypeOf<Person>().toEqualTypeOf<GetObjectFromProperties<[], Person>>();
-expectTypeOf<Person["roles"]>().toEqualTypeOf<GetObjectFromProperties<["roles"], Person>>();
+expectTypeOf<Person>().toEqualTypeOf<GetObjectFromProperties<Person, []>>();
+expectTypeOf<Person["roles"]>().toEqualTypeOf<GetObjectFromProperties<Person, ["roles"]>>();
 expectTypeOf<Person["children"][number]>().toEqualTypeOf<
-	GetObjectFromProperties<["children", "0"], Person>
+	GetObjectFromProperties<Person, ["children", "0"]>
 >();
 expectTypeOf<Person["children"][number]>().toEqualTypeOf<
-	GetObjectFromProperties<["children", number], Person>
+	GetObjectFromProperties<Person, ["children", number]>
 >();
 expectTypeOf<never>().toEqualTypeOf<
-	GetObjectFromProperties<["children", "0", "childName"], Person>
+	GetObjectFromProperties<Person, ["children", "0", "childName"]>
 >();
 
 expectTypeOf<never>().toEqualTypeOf<
-	GetObjectFromProperties<["children", "0", "childName", "doesNotExist"], Person>
+	GetObjectFromProperties<Person, ["children", "0", "childName", "doesNotExist"]>
 >();
 expectTypeOf<never>().toEqualTypeOf<
-	GetObjectFromProperties<["children", number, "childName", "doesNotExist"], Person>
+	GetObjectFromProperties<Person, ["children", number, "childName", "doesNotExist"]>
 >();
 
 // test EndsOn
