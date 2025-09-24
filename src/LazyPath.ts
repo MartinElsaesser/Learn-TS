@@ -13,17 +13,19 @@ expectTypeOf<"a">().toEqualTypeOf<Join<"a", "", ".">>();
 expectTypeOf<"b">().toEqualTypeOf<Join<"", "b", ".">>();
 expectTypeOf<"a.b">().toEqualTypeOf<Join<"a", "b", ".">>();
 
-type JoinArr<SArr extends string[]> =
-	SArr extends [infer F extends string, ...infer R extends string[]] ? Join<F, JoinArr<R>, ".">
+type JoinArr<SArr extends (string | number)[]> =
+	SArr extends [infer F extends string | number, ...infer R extends (string | number)[]] ?
+		Join<`${F}`, JoinArr<R>, ".">
 	:	"";
 
 expectTypeOf<"">().toEqualTypeOf<JoinArr<[""]>>();
 expectTypeOf<"a">().toEqualTypeOf<JoinArr<["a"]>>();
 expectTypeOf<"a.b">().toEqualTypeOf<JoinArr<["a", "b"]>>();
 expectTypeOf<"a.b.c">().toEqualTypeOf<JoinArr<["a", "b", "c"]>>();
+expectTypeOf<`a.${number}.c`>().toEqualTypeOf<JoinArr<["a", number, "c"]>>();
 
-type ResolveObjPath<PathSegments extends string[], Obj> =
-	PathSegments extends [infer Segment, ...infer Rest extends string[]] ?
+type ResolveObjPath<PathSegments extends (string | number)[], Obj> =
+	PathSegments extends [infer Segment, ...infer Rest extends (string | number)[]] ?
 		Segment extends keyof Obj ?
 			ResolveObjPath<Rest, Obj[Segment]>
 		:	never
@@ -34,11 +36,17 @@ expectTypeOf<Person["roles"]>().toEqualTypeOf<ResolveObjPath<["roles"], Person>>
 expectTypeOf<Person["children"][number]>().toEqualTypeOf<
 	ResolveObjPath<["children", "0"], Person>
 >();
+expectTypeOf<Person["children"][number]>().toEqualTypeOf<
+	ResolveObjPath<["children", number], Person>
+>();
 expectTypeOf<Person["children"][number]["childName"]>().toEqualTypeOf<
 	ResolveObjPath<["children", "0", "childName"], Person>
 >();
 expectTypeOf<never>().toEqualTypeOf<
 	ResolveObjPath<["children", "0", "childName", "doesNotExist"], Person>
+>();
+expectTypeOf<never>().toEqualTypeOf<
+	ResolveObjPath<["children", number, "childName", "doesNotExist"], Person>
 >();
 
 type EndsOn<S extends string, LastChar extends string> =
@@ -84,8 +92,13 @@ type LazyPath<
 	JoinedPathSegments extends string = JoinArr<PathSegments>,
 > =
 	ResolveObjPath<PathSegments, Obj> extends never ? "Error (no further path)"
-	: ResolveObjPath<PathSegments, Obj> extends any[] ? Join<JoinedPathSegments, `${number}`, ".">
-	: Join<JoinedPathSegments, keyof ResolveObjPath<PathSegments, Obj>, ".">;
+	: ResolveObjPath<PathSegments, Obj> extends object ?
+		ResolveObjPath<PathSegments, Obj> extends any[] ?
+			Join<JoinedPathSegments, `${number}`, ".">
+		:	Join<JoinedPathSegments, Cast<keyof ResolveObjPath<PathSegments, Obj>, string>, ".">
+	:	"Error (no further path)";
+
+type Cast<T, U> = T extends U ? T : U;
 
 expectTypeOf<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
 	LazyPath<"", Person>
@@ -111,7 +124,7 @@ expectTypeOf<"Error (no further path)">().toEqualTypeOf<
 	LazyPath<"children.0.childName.", Person>
 >();
 
-type path = "children.0.";
+type path = "children.0.childName.";
 type pathSegments = ParsePreviousPathSegments<path>;
 //   ^?
 type joinedSegments = JoinArr<pathSegments>;
@@ -122,8 +135,11 @@ type resolvedObj = ResolveObjPath<pathSegments, Person>;
 type reconstructed =
 	//   ^?
 	resolvedObj extends never ? "Error (no further path)"
-	: resolvedObj extends any[] ? Join<joinedSegments, `${number}`, ".">
-	: Join<joinedSegments, keyof resolvedObj, ".">;
+	: resolvedObj extends object ?
+		resolvedObj extends any[] ?
+			Join<joinedSegments, `${number}`, ".">
+		:	Join<joinedSegments, Cast<keyof resolvedObj, string>, ".">
+	:	"Error (no further path)";
 
 type test = LazyPath<path, Person>;
 //   ^?
@@ -134,8 +150,6 @@ type ParsePreviousPathSegments<S extends string> =
 		[ParseNumbers<Prev>, ...ParsePreviousPathSegments<Rest>]
 	:	[];
 type ParseNumbers<S extends string> = S extends `${number}` ? number : S;
-
-type _1 = ParseNumbers<"100">;
 
 expectTypeOf<[]>().toEqualTypeOf<ParsePreviousPathSegments<"roles">>();
 expectTypeOf<["roles"]>().toEqualTypeOf<ParsePreviousPathSegments<"roles.">>();
