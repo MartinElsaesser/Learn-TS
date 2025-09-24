@@ -25,12 +25,14 @@ expectTypeOf<"a.b">().toEqualTypeOf<JoinIndexes<["a", "b"]>>();
 expectTypeOf<"a.b.c">().toEqualTypeOf<JoinIndexes<["a", "b", "c"]>>();
 expectTypeOf<`a.${number}.c`>().toEqualTypeOf<JoinIndexes<["a", number, "c"]>>();
 
+type ReturnIfIsObject<T> = T extends object ? T : never;
+
 type ResolveObjPath<PathSegments extends Indexes[], Obj> =
 	PathSegments extends [infer Segment, ...infer Rest extends Indexes[]] ?
 		Segment extends keyof Obj ?
 			ResolveObjPath<Rest, Obj[Segment]>
 		:	never
-	:	Obj;
+	:	ReturnIfIsObject<Obj>;
 
 expectTypeOf<Person>().toEqualTypeOf<ResolveObjPath<[], Person>>();
 expectTypeOf<Person["roles"]>().toEqualTypeOf<ResolveObjPath<["roles"], Person>>();
@@ -90,11 +92,8 @@ type LazyPath<
 	ResolvedObj = ResolveObjPath<PathSegments, Obj>,
 > =
 	ResolvedObj extends never ? "Error (no further path)"
-	: ResolvedObj extends object ?
-		ResolvedObj extends any[] ?
-			ConcatStrings<JoinedPathSegments, `${number}`, ".">
-		:	ConcatStrings<JoinedPathSegments, Cast<keyof ResolvedObj, string>, ".">
-	:	"Error (no further path)";
+	: ResolvedObj extends any[] ? ConcatStrings<JoinedPathSegments, `${number}`, ".">
+	: ConcatStrings<JoinedPathSegments, Cast<keyof ResolvedObj, string>, ".">;
 
 type Cast<T, U> = T extends U ? T : U;
 
@@ -122,7 +121,7 @@ expectTypeOf<"Error (no further path)">().toEqualTypeOf<
 	LazyPath<"children.0.childName.", Person>
 >();
 
-type path = "children.0.childName.";
+type path = "roles.0.";
 type pathSegments = ParsePath<path>;
 //   ^?
 type joinedSegments = JoinIndexes<pathSegments>;
