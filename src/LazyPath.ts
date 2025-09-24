@@ -27,29 +27,28 @@ expectTypeOf<`a.${number}.c`>().toEqualTypeOf<JoinIndexes<["a", number, "c"]>>()
 
 type ReturnIfIsObject<T> = T extends object ? T : never;
 
-type ResolveObjPath<PathSegments extends Indexes[], Obj> =
+type ResolveIndexable<PathSegments extends Indexes[], Obj> =
 	PathSegments extends [infer Segment, ...infer Rest extends Indexes[]] ?
 		Segment extends keyof Obj ?
-			ResolveObjPath<Rest, Obj[Segment]>
+			ResolveIndexable<Rest, Obj[Segment]>
 		:	never
 	:	ReturnIfIsObject<Obj>;
 
-expectTypeOf<Person>().toEqualTypeOf<ResolveObjPath<[], Person>>();
-expectTypeOf<Person["roles"]>().toEqualTypeOf<ResolveObjPath<["roles"], Person>>();
+expectTypeOf<Person>().toEqualTypeOf<ResolveIndexable<[], Person>>();
+expectTypeOf<Person["roles"]>().toEqualTypeOf<ResolveIndexable<["roles"], Person>>();
 expectTypeOf<Person["children"][number]>().toEqualTypeOf<
-	ResolveObjPath<["children", "0"], Person>
+	ResolveIndexable<["children", "0"], Person>
 >();
 expectTypeOf<Person["children"][number]>().toEqualTypeOf<
-	ResolveObjPath<["children", number], Person>
+	ResolveIndexable<["children", number], Person>
 >();
-expectTypeOf<Person["children"][number]["childName"]>().toEqualTypeOf<
-	ResolveObjPath<["children", "0", "childName"], Person>
+expectTypeOf<never>().toEqualTypeOf<ResolveIndexable<["children", "0", "childName"], Person>>();
+
+expectTypeOf<never>().toEqualTypeOf<
+	ResolveIndexable<["children", "0", "childName", "doesNotExist"], Person>
 >();
 expectTypeOf<never>().toEqualTypeOf<
-	ResolveObjPath<["children", "0", "childName", "doesNotExist"], Person>
->();
-expectTypeOf<never>().toEqualTypeOf<
-	ResolveObjPath<["children", number, "childName", "doesNotExist"], Person>
+	ResolveIndexable<["children", number, "childName", "doesNotExist"], Person>
 >();
 
 type EndsOn<S extends string, LastChar extends string> =
@@ -89,9 +88,9 @@ type LazyPath<
 	Obj,
 	PathSegments extends Indexes[] = ParsePath<Path>,
 	JoinedPathSegments extends string = JoinIndexes<PathSegments>,
-	ResolvedObj = ResolveObjPath<PathSegments, Obj>,
+	ResolvedObj = ResolveIndexable<PathSegments, Obj>,
 > =
-	ResolvedObj extends never ? "Error (no further path)"
+	[ResolvedObj] extends [never] ? "Error (no further path)"
 	: ResolvedObj extends any[] ? ConcatStrings<JoinedPathSegments, `${number}`, ".">
 	: ConcatStrings<JoinedPathSegments, Cast<keyof ResolvedObj, string>, ".">;
 
@@ -126,7 +125,7 @@ type pathSegments = ParsePath<path>;
 //   ^?
 type joinedSegments = JoinIndexes<pathSegments>;
 //   ^?
-type resolvedObj = ResolveObjPath<pathSegments, Person>;
+type resolvedObj = ResolveIndexable<pathSegments, Person>;
 //   ^?
 
 type reconstructed =
