@@ -13,22 +13,22 @@ expectTypeOf<"a">().toEqualTypeOf<ConcatStrings<"a", "", ".">>();
 expectTypeOf<"b">().toEqualTypeOf<ConcatStrings<"", "b", ".">>();
 expectTypeOf<"a.b">().toEqualTypeOf<ConcatStrings<"a", "b", ".">>();
 
-type Indexes = string | number;
-type JoinIndexes<SArr extends Indexes[]> =
-	SArr extends [infer F extends Indexes, ...infer R extends Indexes[]] ?
-		ConcatStrings<`${F}`, JoinIndexes<R>, ".">
+type Property = string | number;
+type JoinProperties<SArr extends Property[]> =
+	SArr extends [infer F extends Property, ...infer R extends Property[]] ?
+		ConcatStrings<`${F}`, JoinProperties<R>, ".">
 	:	"";
 
-expectTypeOf<"">().toEqualTypeOf<JoinIndexes<[""]>>();
-expectTypeOf<"a">().toEqualTypeOf<JoinIndexes<["a"]>>();
-expectTypeOf<"a.b">().toEqualTypeOf<JoinIndexes<["a", "b"]>>();
-expectTypeOf<"a.b.c">().toEqualTypeOf<JoinIndexes<["a", "b", "c"]>>();
-expectTypeOf<`a.${number}.c`>().toEqualTypeOf<JoinIndexes<["a", number, "c"]>>();
+expectTypeOf<"">().toEqualTypeOf<JoinProperties<[""]>>();
+expectTypeOf<"a">().toEqualTypeOf<JoinProperties<["a"]>>();
+expectTypeOf<"a.b">().toEqualTypeOf<JoinProperties<["a", "b"]>>();
+expectTypeOf<"a.b.c">().toEqualTypeOf<JoinProperties<["a", "b", "c"]>>();
+expectTypeOf<`a.${number}.c`>().toEqualTypeOf<JoinProperties<["a", number, "c"]>>();
 
 type ReturnIfIsObject<T> = T extends object ? T : never;
 
-type ResolveIndexable<PathSegments extends Indexes[], Obj> =
-	PathSegments extends [infer Segment, ...infer Rest extends Indexes[]] ?
+type ResolveIndexable<PathSegments extends Property[], Obj> =
+	PathSegments extends [infer Segment, ...infer Rest extends Property[]] ?
 		Segment extends keyof Obj ?
 			ResolveIndexable<Rest, Obj[Segment]>
 		:	never
@@ -83,11 +83,11 @@ type Person = {
 	age: 30;
 };
 
-type LazyPath<
+type LazyPropertyPath<
 	Path extends string,
 	Obj,
-	PathSegments extends Indexes[] = ParsePath<Path>,
-	JoinedPathSegments extends string = JoinIndexes<PathSegments>,
+	PathSegments extends Property[] = ParsePropertyPath<Path>,
+	JoinedPathSegments extends string = JoinProperties<PathSegments>,
 	ResolvedObj = ResolveIndexable<PathSegments, Obj>,
 > =
 	[ResolvedObj] extends [never] ? "Error (no further path)"
@@ -97,33 +97,33 @@ type LazyPath<
 type Cast<T, U> = T extends U ? T : U;
 
 expectTypeOf<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
-	LazyPath<"", Person>
+	LazyPropertyPath<"", Person>
 >();
 expectTypeOf<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
-	LazyPath<"roles", Person>
+	LazyPropertyPath<"roles", Person>
 >();
 
 expectTypeOf<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
-	LazyPath<"ro", Person>
+	LazyPropertyPath<"ro", Person>
 >();
-expectTypeOf<`roles.${number}`>().toEqualTypeOf<LazyPath<"roles.", Person>>();
-expectTypeOf<`roles.${number}`>().toEqualTypeOf<LazyPath<"roles.0", Person>>();
-expectTypeOf<"Error (no further path)">().toEqualTypeOf<LazyPath<"roles.0.", Person>>();
-expectTypeOf<`children.${number}`>().toEqualTypeOf<LazyPath<"children.0", Person>>();
+expectTypeOf<`roles.${number}`>().toEqualTypeOf<LazyPropertyPath<"roles.", Person>>();
+expectTypeOf<`roles.${number}`>().toEqualTypeOf<LazyPropertyPath<"roles.0", Person>>();
+expectTypeOf<"Error (no further path)">().toEqualTypeOf<LazyPropertyPath<"roles.0.", Person>>();
+expectTypeOf<`children.${number}`>().toEqualTypeOf<LazyPropertyPath<"children.0", Person>>();
 expectTypeOf<`children.${number}.childName` | `children.${number}.childAge`>().toEqualTypeOf<
-	LazyPath<"children.0.", Person>
+	LazyPropertyPath<"children.0.", Person>
 >();
 expectTypeOf<`children.${number}.childName` | `children.${number}.childAge`>().toEqualTypeOf<
-	LazyPath<"children.0.childName", Person>
+	LazyPropertyPath<"children.0.childName", Person>
 >();
 expectTypeOf<"Error (no further path)">().toEqualTypeOf<
-	LazyPath<"children.0.childName.", Person>
+	LazyPropertyPath<"children.0.childName.", Person>
 >();
 
 type path = "roles.0.";
-type pathSegments = ParsePath<path>;
+type pathSegments = ParsePropertyPath<path>;
 //   ^?
-type joinedSegments = JoinIndexes<pathSegments>;
+type joinedSegments = JoinProperties<pathSegments>;
 //   ^?
 type resolvedObj = ResolveIndexable<pathSegments, Person>;
 //   ^?
@@ -137,22 +137,24 @@ type reconstructed =
 		:	ConcatStrings<joinedSegments, Cast<keyof resolvedObj, string>, ".">
 	:	"Error (no further path)";
 
-type test = LazyPath<path, Person>;
+type test = LazyPropertyPath<path, Person>;
 //   ^?
-type lel = ParsePath<"children.0.">;
+type lel = ParsePropertyPath<"children.0.">;
 
-type ParsePath<S extends string> =
-	S extends `${infer Prev}.${infer Rest}` ? [ParseNumbers<Prev>, ...ParsePath<Rest>] : [];
-type ParseNumbers<S extends string> = S extends `${number}` ? number : S;
+type ParsePropertyPath<S extends string> =
+	S extends `${infer Prev}.${infer Rest}` ?
+		[ParseNumberProperty<Prev>, ...ParsePropertyPath<Rest>]
+	:	[];
+type ParseNumberProperty<S extends string> = S extends `${number}` ? number : S;
 
-expectTypeOf<[]>().toEqualTypeOf<ParsePath<"roles">>();
-expectTypeOf<["roles"]>().toEqualTypeOf<ParsePath<"roles.">>();
-expectTypeOf<["roles"]>().toEqualTypeOf<ParsePath<"roles.0">>();
-expectTypeOf<["children", number]>().toEqualTypeOf<ParsePath<"children.0.childName">>();
+expectTypeOf<[]>().toEqualTypeOf<ParsePropertyPath<"roles">>();
+expectTypeOf<["roles"]>().toEqualTypeOf<ParsePropertyPath<"roles.">>();
+expectTypeOf<["roles"]>().toEqualTypeOf<ParsePropertyPath<"roles.0">>();
+expectTypeOf<["children", number]>().toEqualTypeOf<ParsePropertyPath<"children.0.childName">>();
 
 declare function get<path extends string, Obj>(
-	path: LazyPath<NoInfer<path>, Obj> | path,
+	path: LazyPropertyPath<NoInfer<path>, Obj> | path,
 	obj: Obj
-): LazyPath<path, Obj>;
+): LazyPropertyPath<path, Obj>;
 
 const test2 = get("roles.", person);
