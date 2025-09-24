@@ -1,6 +1,6 @@
 import { expectTypeOf } from "expect-type";
 
-type Join<S1 extends string, S2 extends string, Separator extends string> =
+type ConcatStrings<S1 extends string, S2 extends string, Separator extends string> =
 	S1 extends "" ?
 		S2 extends "" ?
 			""
@@ -8,24 +8,25 @@ type Join<S1 extends string, S2 extends string, Separator extends string> =
 	: S2 extends "" ? S1
 	: `${S1}${Separator}${S2}`;
 
-expectTypeOf<"">().toEqualTypeOf<Join<"", "", ".">>();
-expectTypeOf<"a">().toEqualTypeOf<Join<"a", "", ".">>();
-expectTypeOf<"b">().toEqualTypeOf<Join<"", "b", ".">>();
-expectTypeOf<"a.b">().toEqualTypeOf<Join<"a", "b", ".">>();
+expectTypeOf<"">().toEqualTypeOf<ConcatStrings<"", "", ".">>();
+expectTypeOf<"a">().toEqualTypeOf<ConcatStrings<"a", "", ".">>();
+expectTypeOf<"b">().toEqualTypeOf<ConcatStrings<"", "b", ".">>();
+expectTypeOf<"a.b">().toEqualTypeOf<ConcatStrings<"a", "b", ".">>();
 
-type JoinArr<SArr extends (string | number)[]> =
-	SArr extends [infer F extends string | number, ...infer R extends (string | number)[]] ?
-		Join<`${F}`, JoinArr<R>, ".">
+type Indexes = string | number;
+type JoinIndexes<SArr extends Indexes[]> =
+	SArr extends [infer F extends Indexes, ...infer R extends Indexes[]] ?
+		ConcatStrings<`${F}`, JoinIndexes<R>, ".">
 	:	"";
 
-expectTypeOf<"">().toEqualTypeOf<JoinArr<[""]>>();
-expectTypeOf<"a">().toEqualTypeOf<JoinArr<["a"]>>();
-expectTypeOf<"a.b">().toEqualTypeOf<JoinArr<["a", "b"]>>();
-expectTypeOf<"a.b.c">().toEqualTypeOf<JoinArr<["a", "b", "c"]>>();
-expectTypeOf<`a.${number}.c`>().toEqualTypeOf<JoinArr<["a", number, "c"]>>();
+expectTypeOf<"">().toEqualTypeOf<JoinIndexes<[""]>>();
+expectTypeOf<"a">().toEqualTypeOf<JoinIndexes<["a"]>>();
+expectTypeOf<"a.b">().toEqualTypeOf<JoinIndexes<["a", "b"]>>();
+expectTypeOf<"a.b.c">().toEqualTypeOf<JoinIndexes<["a", "b", "c"]>>();
+expectTypeOf<`a.${number}.c`>().toEqualTypeOf<JoinIndexes<["a", number, "c"]>>();
 
-type ResolveObjPath<PathSegments extends (string | number)[], Obj> =
-	PathSegments extends [infer Segment, ...infer Rest extends (string | number)[]] ?
+type ResolveObjPath<PathSegments extends Indexes[], Obj> =
+	PathSegments extends [infer Segment, ...infer Rest extends Indexes[]] ?
 		Segment extends keyof Obj ?
 			ResolveObjPath<Rest, Obj[Segment]>
 		:	never
@@ -81,22 +82,18 @@ type Person = {
 	age: 30;
 };
 
-type ShouldPathResolve<Path extends string> =
-	EndsOn<Path, "."> extends true ? true
-	: Path extends "" ? true
-	: false;
 type LazyPath<
 	Path extends string,
 	Obj,
-	PathSegments extends string[] = ParsePreviousPathSegments<Path>,
-	JoinedPathSegments extends string = JoinArr<PathSegments>,
+	PathSegments extends Indexes[] = ParsePath<Path>,
+	JoinedPathSegments extends string = JoinIndexes<PathSegments>,
 	ResolvedObj = ResolveObjPath<PathSegments, Obj>,
 > =
 	ResolvedObj extends never ? "Error (no further path)"
 	: ResolvedObj extends object ?
 		ResolvedObj extends any[] ?
-			Join<JoinedPathSegments, `${number}`, ".">
-		:	Join<JoinedPathSegments, Cast<keyof ResolvedObj, string>, ".">
+			ConcatStrings<JoinedPathSegments, `${number}`, ".">
+		:	ConcatStrings<JoinedPathSegments, Cast<keyof ResolvedObj, string>, ".">
 	:	"Error (no further path)";
 
 type Cast<T, U> = T extends U ? T : U;
@@ -126,9 +123,9 @@ expectTypeOf<"Error (no further path)">().toEqualTypeOf<
 >();
 
 type path = "children.0.childName.";
-type pathSegments = ParsePreviousPathSegments<path>;
+type pathSegments = ParsePath<path>;
 //   ^?
-type joinedSegments = JoinArr<pathSegments>;
+type joinedSegments = JoinIndexes<pathSegments>;
 //   ^?
 type resolvedObj = ResolveObjPath<pathSegments, Person>;
 //   ^?
@@ -138,26 +135,22 @@ type reconstructed =
 	resolvedObj extends never ? "Error (no further path)"
 	: resolvedObj extends object ?
 		resolvedObj extends any[] ?
-			Join<joinedSegments, `${number}`, ".">
-		:	Join<joinedSegments, Cast<keyof resolvedObj, string>, ".">
+			ConcatStrings<joinedSegments, `${number}`, ".">
+		:	ConcatStrings<joinedSegments, Cast<keyof resolvedObj, string>, ".">
 	:	"Error (no further path)";
 
 type test = LazyPath<path, Person>;
 //   ^?
-type lel = ParsePreviousPathSegments<"children.0.">;
+type lel = ParsePath<"children.0.">;
 
-type ParsePreviousPathSegments<S extends string> =
-	S extends `${infer Prev}.${infer Rest}` ?
-		[ParseNumbers<Prev>, ...ParsePreviousPathSegments<Rest>]
-	:	[];
+type ParsePath<S extends string> =
+	S extends `${infer Prev}.${infer Rest}` ? [ParseNumbers<Prev>, ...ParsePath<Rest>] : [];
 type ParseNumbers<S extends string> = S extends `${number}` ? number : S;
 
-expectTypeOf<[]>().toEqualTypeOf<ParsePreviousPathSegments<"roles">>();
-expectTypeOf<["roles"]>().toEqualTypeOf<ParsePreviousPathSegments<"roles.">>();
-expectTypeOf<["roles"]>().toEqualTypeOf<ParsePreviousPathSegments<"roles.0">>();
-expectTypeOf<["children", number]>().toEqualTypeOf<
-	ParsePreviousPathSegments<"children.0.childName">
->();
+expectTypeOf<[]>().toEqualTypeOf<ParsePath<"roles">>();
+expectTypeOf<["roles"]>().toEqualTypeOf<ParsePath<"roles.">>();
+expectTypeOf<["roles"]>().toEqualTypeOf<ParsePath<"roles.0">>();
+expectTypeOf<["children", number]>().toEqualTypeOf<ParsePath<"children.0.childName">>();
 
 declare function get<path extends string, Obj>(
 	path: LazyPath<NoInfer<path>, Obj> | path,
