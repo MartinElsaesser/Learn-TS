@@ -65,7 +65,7 @@ type LazyPropertyPath<
 	IsNum extends boolean = IsValidNumeric<Cast<LastPropertyPath<Path>, string>>,
 > =
 	[ResolvedObj] extends [never] ? "Access error: cannot access this path"
-	: ResolvedObj extends any[] ?
+	: ResolvedObj extends readonly any[] ?
 		IsNum extends true ?
 			IntersectionMerge<Path, JoinProperties<[...Properties, number]>, PathEndsOnDot>
 		:	"Index error: tried to index an array element through a string"
