@@ -37,16 +37,13 @@ type Person = {
 		petAge: 4;
 	};
 	roles: ["admin", "user"];
-	children: [{ childName: "Alice"; childAge: 5 }];
+	children: [{ childName: "Alice"; childAge: 5 }, { childName: "Marco"; childAge: 10 }];
 	favoriteColor: "green";
 	age: 30;
 };
 
 type ParsePropertyPath<S extends string> =
-	S extends `${infer Prev}.${infer Rest}` ?
-		[ParseNumberProperty<Prev>, ...ParsePropertyPath<Rest>]
-	:	[];
-type ParseNumberProperty<S extends string> = S extends `${number}` ? number : S;
+	S extends `${infer Prev}.${infer Rest}` ? [Prev, ...ParsePropertyPath<Rest>] : [];
 type Cast<T, U> = T extends U ? T : U;
 
 type IntersectionMerge<T, Intersection, Condition extends boolean> =
@@ -83,7 +80,7 @@ type DebugLazyPropertyPath<
 };
 /*   DEBUGGING   */
 
-type path = "children.0.";
+type path = "roles.0";
 type _t = LazyPropertyPath<Person, path>;
 type endsOn = EndsOn<path, ".">;
 //   ^?
@@ -108,12 +105,15 @@ const person = {
 		petAge: 4,
 	},
 	roles: ["admin", "user"],
-	children: [{ childName: "Alice", childAge: 5 }],
+	children: [
+		{ childName: "Alice", childAge: 5 },
+		{ childName: "Marco", childAge: 10 },
+	],
 	favoriteColor: "green",
 	age: 30,
 } as const;
 
-const test2 = get("children", person);
+const test2 = get("children.0.childAge", person);
 
 /*   TESTS   */
 // test ConcatStrings
@@ -132,7 +132,7 @@ expectTypeOf<`a.${number}.c`>().toEqualTypeOf<JoinProperties<["a", number, "c"]>
 // test ResolveIndexable
 expectTypeOf<Person>().toEqualTypeOf<GetObjectFromProperties<Person, []>>();
 expectTypeOf<Person["roles"]>().toEqualTypeOf<GetObjectFromProperties<Person, ["roles"]>>();
-expectTypeOf<Person["children"][number]>().toEqualTypeOf<
+expectTypeOf<Person["children"]["0"]>().toEqualTypeOf<
 	GetObjectFromProperties<Person, ["children", "0"]>
 >();
 expectTypeOf<Person["children"][number]>().toEqualTypeOf<
@@ -173,10 +173,10 @@ expectTypeOf<`roles.${number}` | "roles.">().toEqualTypeOf<LazyPropertyPath<Pers
 expectTypeOf<`roles.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "roles.0">>();
 expectTypeOf<"Error (no further path)">().toEqualTypeOf<LazyPropertyPath<Person, "roles.0.">>();
 expectTypeOf<`children.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "children.0">>();
-expectTypeOf<
-	`children.${number}.childName` | `children.${number}.childAge` | "children.0."
->().toEqualTypeOf<LazyPropertyPath<Person, "children.0.">>();
-expectTypeOf<`children.${number}.childName` | `children.${number}.childAge`>().toEqualTypeOf<
+expectTypeOf<`children.0.childName` | `children.0.childAge` | "children.0.">().toEqualTypeOf<
+	LazyPropertyPath<Person, "children.0.">
+>();
+expectTypeOf<`children.0.childName` | `children.0.childAge`>().toEqualTypeOf<
 	LazyPropertyPath<Person, "children.0.childName">
 >();
 expectTypeOf<"Error (no further path)">().toEqualTypeOf<
@@ -187,4 +187,4 @@ expectTypeOf<"Error (no further path)">().toEqualTypeOf<
 expectTypeOf<[]>().toEqualTypeOf<ParsePropertyPath<"roles">>();
 expectTypeOf<["roles"]>().toEqualTypeOf<ParsePropertyPath<"roles.">>();
 expectTypeOf<["roles"]>().toEqualTypeOf<ParsePropertyPath<"roles.0">>();
-expectTypeOf<["children", number]>().toEqualTypeOf<ParsePropertyPath<"children.0.childName">>();
+expectTypeOf<["children", "0"]>().toEqualTypeOf<ParsePropertyPath<"children.0.childName">>();
