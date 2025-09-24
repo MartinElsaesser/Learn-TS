@@ -9,17 +9,17 @@ type ConcatStrings<S1 extends string, S2 extends string, Separator extends strin
 	: `${S1}${Separator}${S2}`;
 
 type Property = string | number;
-type JoinProperties<SArr extends Property[]> =
-	SArr extends [infer F extends Property, ...infer R extends Property[]] ?
+type JoinProperties<Properties extends Property[]> =
+	Properties extends [infer F extends Property, ...infer R extends Property[]] ?
 		ConcatStrings<`${F}`, JoinProperties<R>, ".">
 	:	"";
 
 type ReturnIfIsObject<T> = T extends object ? T : never;
 
-type ResolveIndexable<PathSegments extends Property[], Obj> =
-	PathSegments extends [infer Segment, ...infer Rest extends Property[]] ?
-		Segment extends keyof Obj ?
-			ResolveIndexable<Rest, Obj[Segment]>
+type GetObjectFromProperties<Properties extends Property[], Obj> =
+	Properties extends [infer F, ...infer R extends Property[]] ?
+		F extends keyof Obj ?
+			GetObjectFromProperties<R, Obj[F]>
 		:	never
 	:	ReturnIfIsObject<Obj>;
 
@@ -41,25 +41,31 @@ type Person = {
 	age: 30;
 };
 
+type ParsePropertyPath<S extends string> =
+	S extends `${infer Prev}.${infer Rest}` ?
+		[ParseNumberProperty<Prev>, ...ParsePropertyPath<Rest>]
+	:	[];
+type ParseNumberProperty<S extends string> = S extends `${number}` ? number : S;
+type Cast<T, U> = T extends U ? T : U;
+
 type LazyPropertyPath<
 	Path extends string,
 	Obj,
-	PathSegments extends Property[] = ParsePropertyPath<Path>,
-	JoinedPathSegments extends string = JoinProperties<PathSegments>,
-	ResolvedObj = ResolveIndexable<PathSegments, Obj>,
+	Properties extends Property[] = ParsePropertyPath<Path>,
+	JoinedProperties extends string = JoinProperties<Properties>,
+	ResolvedObj = GetObjectFromProperties<Properties, Obj>,
 > =
 	[ResolvedObj] extends [never] ? "Error (no further path)"
-	: ResolvedObj extends any[] ? ConcatStrings<JoinedPathSegments, `${number}`, ".">
-	: ConcatStrings<JoinedPathSegments, Cast<keyof ResolvedObj, string>, ".">;
+	: ResolvedObj extends any[] ? ConcatStrings<JoinedProperties, `${number}`, ".">
+	: ConcatStrings<JoinedProperties, Cast<keyof ResolvedObj, string>, ".">;
 
-type Cast<T, U> = T extends U ? T : U;
-
+/*   DEBUGGING   */
 type path = "roles.0.";
 type pathSegments = ParsePropertyPath<path>;
 //   ^?
 type joinedSegments = JoinProperties<pathSegments>;
 //   ^?
-type resolvedObj = ResolveIndexable<pathSegments, Person>;
+type resolvedObj = GetObjectFromProperties<pathSegments, Person>;
 //   ^?
 
 type reconstructed =
@@ -74,12 +80,6 @@ type reconstructed =
 type test = LazyPropertyPath<path, Person>;
 //   ^?
 type lel = ParsePropertyPath<"children.0.">;
-
-type ParsePropertyPath<S extends string> =
-	S extends `${infer Prev}.${infer Rest}` ?
-		[ParseNumberProperty<Prev>, ...ParsePropertyPath<Rest>]
-	:	[];
-type ParseNumberProperty<S extends string> = S extends `${number}` ? number : S;
 
 /*   IMPLEMENTATION   */
 declare function get<path extends string, Obj>(
@@ -115,21 +115,23 @@ expectTypeOf<"a.b.c">().toEqualTypeOf<JoinProperties<["a", "b", "c"]>>();
 expectTypeOf<`a.${number}.c`>().toEqualTypeOf<JoinProperties<["a", number, "c"]>>();
 
 // test ResolveIndexable
-expectTypeOf<Person>().toEqualTypeOf<ResolveIndexable<[], Person>>();
-expectTypeOf<Person["roles"]>().toEqualTypeOf<ResolveIndexable<["roles"], Person>>();
+expectTypeOf<Person>().toEqualTypeOf<GetObjectFromProperties<[], Person>>();
+expectTypeOf<Person["roles"]>().toEqualTypeOf<GetObjectFromProperties<["roles"], Person>>();
 expectTypeOf<Person["children"][number]>().toEqualTypeOf<
-	ResolveIndexable<["children", "0"], Person>
+	GetObjectFromProperties<["children", "0"], Person>
 >();
 expectTypeOf<Person["children"][number]>().toEqualTypeOf<
-	ResolveIndexable<["children", number], Person>
+	GetObjectFromProperties<["children", number], Person>
 >();
-expectTypeOf<never>().toEqualTypeOf<ResolveIndexable<["children", "0", "childName"], Person>>();
+expectTypeOf<never>().toEqualTypeOf<
+	GetObjectFromProperties<["children", "0", "childName"], Person>
+>();
 
 expectTypeOf<never>().toEqualTypeOf<
-	ResolveIndexable<["children", "0", "childName", "doesNotExist"], Person>
+	GetObjectFromProperties<["children", "0", "childName", "doesNotExist"], Person>
 >();
 expectTypeOf<never>().toEqualTypeOf<
-	ResolveIndexable<["children", number, "childName", "doesNotExist"], Person>
+	GetObjectFromProperties<["children", number, "childName", "doesNotExist"], Person>
 >();
 
 // test EndsOn
