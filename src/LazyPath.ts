@@ -153,13 +153,13 @@ expectTypeOf<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().t
 expectTypeOf<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
 	LazyPropertyPath<Person, "ro">
 >();
-expectTypeOf<`roles.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "roles.">>();
+expectTypeOf<`roles.${number}` | "roles.">().toEqualTypeOf<LazyPropertyPath<Person, "roles.">>();
 expectTypeOf<`roles.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "roles.0">>();
 expectTypeOf<"Error (no further path)">().toEqualTypeOf<LazyPropertyPath<Person, "roles.0.">>();
 expectTypeOf<`children.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "children.0">>();
-expectTypeOf<`children.${number}.childName` | `children.${number}.childAge`>().toEqualTypeOf<
-	LazyPropertyPath<Person, "children.0.">
->();
+expectTypeOf<
+	`children.${number}.childName` | `children.${number}.childAge` | "children.0."
+>().toEqualTypeOf<LazyPropertyPath<Person, "children.0.">>();
 expectTypeOf<`children.${number}.childName` | `children.${number}.childAge`>().toEqualTypeOf<
 	LazyPropertyPath<Person, "children.0.childName">
 >();
