@@ -276,9 +276,15 @@ function get<
 	let segments = (path as string).split(".");
 
 	segments.forEach(segment => {
-		if (!resolvedObj[segment] && Array.isArray(resolvedObj)) {
-			throw new Error("Index error: tried to index an array element through a string");
-		} else if (!resolvedObj[segment]) {
+		if (Array.isArray(resolvedObj)) {
+			if (segment === "") {
+				throw new Error("Input a number");
+			}
+			if (!/^\d+$/.test(segment)) {
+				throw new Error("Index error: tried to index an array element through a string");
+			}
+		}
+		if (!resolvedObj[segment]) {
 			throw new Error("Access error: cannot access this path");
 		}
 		resolvedObj = resolvedObj[segment];
@@ -286,7 +292,7 @@ function get<
 	return resolvedObj as unknown as _Return;
 }
 
-const test2 = get(person, "children.0");
+const test2 = get(person, "children.3");
 //    ^?
 console.log(test2);
 
