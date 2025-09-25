@@ -266,8 +266,6 @@ const person = {
 	age: 30,
 } as const;
 
-type lel = keyof typeof person;
-
 function get<
 	Path extends string,
 	Obj extends Record<string | number, any>,
@@ -288,7 +286,7 @@ function get<
 	return resolvedObj as unknown as _Return;
 }
 
-const test2 = get(person, "children.name");
+const test2 = get(person, "children.0");
 //    ^?
 console.log(test2);
 
