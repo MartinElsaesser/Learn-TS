@@ -268,14 +268,29 @@ const person = {
 
 type lel = keyof typeof person;
 
-declare function get<
+function get<
 	Path extends string,
-	Obj,
-	Properties extends string[] = $String.Split<Path, ".">,
->(obj: Obj, Path: LazyPropertyPath<Obj, Path>): $Object.PropertyPathLookup<Obj, Properties>;
+	Obj extends Record<string | number, any>,
+	_Properties extends string[] = $String.Split<Path, ".">,
+	_Return = $Object.PropertyPathLookup<Obj, _Properties>,
+>(obj: Obj, path: LazyPropertyPath<Obj, Path>): _Return {
+	let resolvedObj = obj;
+	let segments = (path as string).split(".");
 
-const test2 = get(person, "children.0");
+	segments.forEach(segment => {
+		if (!resolvedObj[segment] && Array.isArray(resolvedObj)) {
+			throw new Error("Index error: tried to index an array element through a string");
+		} else if (!resolvedObj[segment]) {
+			throw new Error("Access error: cannot access this path");
+		}
+		resolvedObj = resolvedObj[segment];
+	});
+	return resolvedObj as unknown as _Return;
+}
+
+const test2 = get(person, "children.name");
 //    ^?
+console.log(test2);
 
 /*   TESTS   */
 // test ConcatStrings
