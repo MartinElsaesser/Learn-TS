@@ -50,8 +50,6 @@ type EndsOn<S extends string, LastChar extends string> =
 
 type Person = typeof person;
 
-type LastPropertyPath<S extends string> =
-	S extends `${infer Prev}.${infer Rest}` ? LastPropertyPath<Rest> : S;
 type Cast<T, U> = T extends U ? T : U;
 
 type IntersectionMerge<T, Intersection, Condition extends boolean> =
@@ -65,43 +63,48 @@ type IsValidNumeric<String> =
 type LazyPropertyPath<
 	Obj,
 	Path extends string,
-	Properties extends Property[] = SplitString<Path, ".">,
-	AllButLastProperties extends Property[] = AllButLastArrayElement<Properties>,
-	LastProperty extends Property = LastArrayElement<Properties>,
-	ResolvedObj = GetObjectFromProperties<Obj, Properties>,
+	Properties extends string[] = SplitString<Path, ".">,
+	LastProperty extends string = LastArrayElement<Properties>,
+	AllButLastProperties extends string[] = AllButLastArrayElement<Properties>,
+	SubObj = GetObjectFromProperties<Obj, AllButLastProperties>,
 	PathEndsOnDot extends boolean = EndsOn<Path, ".">,
-	IsNum extends boolean = IsValidNumeric<Cast<LastPropertyPath<Path>, string>>,
+	IsNum extends boolean = IsValidNumeric<LastProperty>,
 > =
-	[ResolvedObj] extends [never] ? "Access error: cannot access this path"
-	: ResolvedObj extends readonly any[] ?
+	[SubObj] extends [never] ? "Access error: cannot access this path"
+	: SubObj extends readonly any[] ?
 		IsNum extends true ?
-			IntersectionMerge<Path, JoinProperties<[...Properties, number]>, PathEndsOnDot>
+			IntersectionMerge<
+				Path,
+				JoinProperties<[...AllButLastProperties, number]>,
+				PathEndsOnDot
+			>
 		:	"Index error: tried to index an array element through a string"
 	:	IntersectionMerge<
 			Path,
-			JoinProperties<[...Properties, Cast<keyof ResolvedObj, string>]>,
+			JoinProperties<[...AllButLastProperties, Cast<keyof SubObj, string>]>,
 			PathEndsOnDot
 		>;
 
 type DebugLazyPropertyPath<
 	Obj,
 	Path extends string,
-	Properties extends Property[] = SplitString<Path, ".">,
-	AllButLastProperties extends Property[] = AllButLastArrayElement<Properties>,
-	ResolvedObj = GetObjectFromProperties<Obj, Properties>,
+	Properties extends string[] = SplitString<Path, ".">,
+	LastProperty extends string = LastArrayElement<Properties>,
+	AllButLastProperties extends string[] = AllButLastArrayElement<Properties>,
+	SubObj = GetObjectFromProperties<Obj, AllButLastProperties>,
 	PathEndsOnDot extends boolean = EndsOn<Path, ".">,
-	IsNum extends boolean = IsValidNumeric<Cast<LastPropertyPath<Path>, string>>,
+	IsNum extends boolean = IsValidNumeric<LastProperty>,
 > = {
 	Properties: Properties;
-	ResolvedObj: ResolvedObj;
-	Return: LazyPropertyPath<Obj, Path>;
-	PathEndsOnDot: PathEndsOnDot;
-	Condition: EndsOn<Path, ".">;
+	LastProperty: LastProperty;
 	AllButLastProperties: AllButLastProperties;
+	SubObj: SubObj;
+	PathEndsOnDot: PathEndsOnDot;
+	IsNum: IsNum;
 };
 /*   DEBUGGING   */
 
-type path = "roles.0";
+type path = "roles.";
 type _0 = LazyPropertyPath<Person, path>;
 type _1 = DebugLazyPropertyPath<Person, path>;
 
@@ -141,11 +144,6 @@ expectTypeOf<true>().toEqualTypeOf<IsValidNumeric<"1000">>();
 expectTypeOf<true>().toEqualTypeOf<IsValidNumeric<"-2">>();
 expectTypeOf<false>().toEqualTypeOf<IsValidNumeric<"a">>();
 expectTypeOf<false>().toEqualTypeOf<IsValidNumeric<"pet">>();
-
-// test LastPropertyPath
-expectTypeOf<"0">().toEqualTypeOf<LastPropertyPath<"0">>();
-expectTypeOf<"b">().toEqualTypeOf<LastPropertyPath<"a.b">>();
-expectTypeOf<"c">().toEqualTypeOf<LastPropertyPath<"a.b.c">>();
 
 // test JoinProperties
 expectTypeOf<"">().toEqualTypeOf<JoinProperties<[""]>>();
