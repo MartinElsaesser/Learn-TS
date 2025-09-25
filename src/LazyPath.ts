@@ -1,60 +1,96 @@
 import { expectTypeOf } from "expect-type";
 
-type ConcatStrings<S1 extends string, S2 extends string, Separator extends string> =
-	S1 extends "" ?
-		S2 extends "" ?
-			""
-		:	S2
-	: S2 extends "" ? S1
-	: `${S1}${Separator}${S2}`;
-type SplitString<S extends string, Separator extends string> =
-	S extends `${infer Prev}${Separator}${infer Rest}` ? [Prev, ...SplitString<Rest, Separator>]
-	: S extends "" ? []
-	: [S];
+namespace $String {
+	export type Concat<S1 extends string, S2 extends string, Separator extends string> =
+		S1 extends "" ?
+			S2 extends "" ?
+				""
+			:	S2
+		: S2 extends "" ? S1
+		: `${S1}${Separator}${S2}`;
 
-type AllButLastArrayElement<T extends readonly unknown[]> =
-	T extends [infer F, ...infer R] ?
-		R extends [] ?
-			[]
-		:	[F, ...AllButLastArrayElement<R>]
-	:	[];
+	export type Split<S extends string, Separator extends string> =
+		S extends `${infer Prev}${Separator}${infer Rest}` ? [Prev, ...Split<Rest, Separator>]
+		: S extends "" ? []
+		: [S];
+	export type GetLastChar<T extends string> =
+		T extends `${infer F}${infer R}` ?
+			R extends "" ?
+				F
+			:	GetLastChar<R>
+		:	never;
+	export type EndsOn<S extends string, LastChar extends string> =
+		[GetLastChar<S>, LastChar] extends [LastChar, GetLastChar<S>] ? true : false;
 
-type LastArrayElement<T extends readonly unknown[]> =
-	T extends [infer F, ...infer R] ?
-		R extends [] ?
-			F
-		:	LastArrayElement<R>
-	:	never;
+	expectTypeOf<"">().toEqualTypeOf<Concat<"", "", ".">>();
+	expectTypeOf<"a">().toEqualTypeOf<Concat<"a", "", ".">>();
+	expectTypeOf<"b">().toEqualTypeOf<Concat<"", "b", ".">>();
+	expectTypeOf<"a.b">().toEqualTypeOf<Concat<"a", "b", ".">>();
+
+	expectTypeOf<[]>().toEqualTypeOf<Split<"", ".">>();
+	expectTypeOf<["a"]>().toEqualTypeOf<Split<"a", ".">>();
+	expectTypeOf<["a", "b"]>().toEqualTypeOf<Split<"a.b", ".">>();
+	expectTypeOf<["a", "b", "c"]>().toEqualTypeOf<Split<"a.b.c", ".">>();
+	expectTypeOf<["a"]>().toEqualTypeOf<Split<"a.", ".">>();
+	expectTypeOf<["a", "b"]>().toEqualTypeOf<Split<"a.b.", ".">>();
+
+	expectTypeOf<false>().toEqualTypeOf<EndsOn<"abc", "a">>();
+	expectTypeOf<true>().toEqualTypeOf<EndsOn<"a", "a">>();
+	expectTypeOf<true>().toEqualTypeOf<EndsOn<"abc", "c">>();
+	expectTypeOf<false>().toEqualTypeOf<EndsOn<"", "c">>();
+	expectTypeOf<true>().toEqualTypeOf<EndsOn<"children.0.", ".">>();
+}
+
+namespace $Array {
+	export type AllButLastElement<T extends readonly unknown[]> =
+		T extends [infer F, ...infer R] ?
+			R extends [] ?
+				[]
+			:	[F, ...AllButLastElement<R>]
+		:	[];
+
+	type LastElement<T extends readonly unknown[]> =
+		T extends [infer F, ...infer R] ?
+			R extends [] ?
+				F
+			:	LastElement<R>
+		:	never;
+
+	// test AllButLastElement
+	expectTypeOf<[]>().toEqualTypeOf<AllButLastElement<[]>>();
+	expectTypeOf<[]>().toEqualTypeOf<AllButLastElement<["a"]>>();
+	expectTypeOf<["a"]>().toEqualTypeOf<AllButLastElement<["a", "b"]>>();
+
+	// test LastElement
+	expectTypeOf<never>().toEqualTypeOf<LastElement<[]>>();
+	expectTypeOf<"a">().toEqualTypeOf<LastElement<["a"]>>();
+	expectTypeOf<"b">().toEqualTypeOf<LastElement<["a", "b"]>>();
+	expectTypeOf<"c">().toEqualTypeOf<LastElement<["a", "b", "c"]>>();
+}
+
+namespace $Object {
+	type ObjectValueByProperties<Obj, Properties extends Property[]> =
+		Properties extends [infer F, ...infer R extends Property[]] ?
+			F extends keyof Obj ?
+				ObjectValueByProperties<Obj[F], R>
+			:	never
+		:	ReturnIfIsObject<Obj>;
+
+	type ValueByProperties<Obj, Properties extends string[]> =
+		Properties extends [infer F, ...infer R extends string[]] ?
+			F extends keyof Obj ?
+				ValueByProperties<Obj[F], R>
+			:	F
+		:	Obj;
+}
 
 type Property = string | number;
 type JoinProperties<Properties extends Property[]> =
 	Properties extends [infer F extends Property, ...infer R extends Property[]] ?
-		ConcatStrings<`${F}`, JoinProperties<R>, ".">
+		$String.Concat<`${F}`, JoinProperties<R>, ".">
 	:	"";
 
 type ReturnIfIsObject<T> = T extends object ? T : never;
-
-type GetObjectFromProperties<Obj, Properties extends Property[]> =
-	Properties extends [infer F, ...infer R extends Property[]] ?
-		F extends keyof Obj ?
-			GetObjectFromProperties<Obj[F], R>
-		:	never
-	:	ReturnIfIsObject<Obj>;
-
-type GetFromProperties<Obj, Properties extends string[]> =
-	Properties extends [infer F, ...infer R extends string[]] ?
-		F extends keyof Obj ?
-			GetObjectFromProperties<Obj[F], R>
-		:	F
-	:	Obj;
-type GetLastChar<T extends string> =
-	T extends `${infer F}${infer R}` ?
-		R extends "" ?
-			F
-		:	GetLastChar<R>
-	:	never;
-type EndsOn<S extends string, LastChar extends string> =
-	[GetLastChar<S>, LastChar] extends [LastChar, GetLastChar<S>] ? true : false;
 
 type Person = typeof person;
 
@@ -144,10 +180,6 @@ const test2 = get(person, "favoritePet.petAge");
 
 /*   TESTS   */
 // test ConcatStrings
-expectTypeOf<"">().toEqualTypeOf<ConcatStrings<"", "", ".">>();
-expectTypeOf<"a">().toEqualTypeOf<ConcatStrings<"a", "", ".">>();
-expectTypeOf<"b">().toEqualTypeOf<ConcatStrings<"", "b", ".">>();
-expectTypeOf<"a.b">().toEqualTypeOf<ConcatStrings<"a", "b", ".">>();
 
 // test IsNumeric
 expectTypeOf<true>().toEqualTypeOf<IsValidNumeric<"0">>();
@@ -184,13 +216,6 @@ expectTypeOf<never>().toEqualTypeOf<
 	GetObjectFromProperties<Person, ["children", number, "childName", "doesNotExist"]>
 >();
 
-// test EndsOn
-expectTypeOf<false>().toEqualTypeOf<EndsOn<"abc", "a">>();
-expectTypeOf<true>().toEqualTypeOf<EndsOn<"a", "a">>();
-expectTypeOf<true>().toEqualTypeOf<EndsOn<"abc", "c">>();
-expectTypeOf<false>().toEqualTypeOf<EndsOn<"", "c">>();
-expectTypeOf<true>().toEqualTypeOf<EndsOn<"children.0.", ".">>();
-
 // test LazyPropertyPath
 expectTypeOf<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
 	LazyPropertyPath<Person, "">
@@ -220,32 +245,14 @@ expectTypeOf<"Access error: cannot access this path">().toEqualTypeOf<
 	LazyPropertyPath<Person, "children.0.childName.">
 >();
 
-// test AllButLastArrayElement
-expectTypeOf<[]>().toEqualTypeOf<AllButLastArrayElement<[]>>();
-expectTypeOf<[]>().toEqualTypeOf<AllButLastArrayElement<["a"]>>();
-expectTypeOf<["a"]>().toEqualTypeOf<AllButLastArrayElement<["a", "b"]>>();
-
-// test LastArrayElement
-expectTypeOf<never>().toEqualTypeOf<LastArrayElement<[]>>();
-expectTypeOf<"a">().toEqualTypeOf<LastArrayElement<["a"]>>();
-expectTypeOf<"b">().toEqualTypeOf<LastArrayElement<["a", "b"]>>();
-expectTypeOf<"c">().toEqualTypeOf<LastArrayElement<["a", "b", "c"]>>();
+// test ParsePropertyPath
 
 // test ParsePropertyPath
-expectTypeOf<[]>().toEqualTypeOf<SplitString<"", ".">>();
-expectTypeOf<["a"]>().toEqualTypeOf<SplitString<"a", ".">>();
-expectTypeOf<["a", "b"]>().toEqualTypeOf<SplitString<"a.b", ".">>();
-expectTypeOf<["a", "b", "c"]>().toEqualTypeOf<SplitString<"a.b.c", ".">>();
-expectTypeOf<["a"]>().toEqualTypeOf<SplitString<"a.", ".">>();
-expectTypeOf<["a", "b"]>().toEqualTypeOf<SplitString<"a.b.", ".">>();
-
-// test ParsePropertyPath
-expectTypeOf<[]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"roles", ".">>>();
-expectTypeOf<["roles"]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"roles.", ".">>>();
-expectTypeOf<["roles"]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"roles.0", ".">>>();
-expectTypeOf<["children", "0"]>().toEqualTypeOf<
-	AllButLastArrayElement<SplitString<"children.0.childName", ".">>
->();
+expectTypeOf<[]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"a", ".">>>();
+expectTypeOf<[]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"a.", ".">>>();
+expectTypeOf<["a"]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"a.b", ".">>>();
+expectTypeOf<["a"]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"a.b.", ".">>>();
+expectTypeOf<["a", "b"]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"a.b.c", ".">>>();
 
 // test GetFromProperties
 expectTypeOf<Person["roles"]>().toEqualTypeOf<
