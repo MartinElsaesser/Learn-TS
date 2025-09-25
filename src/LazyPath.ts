@@ -302,34 +302,39 @@ expected<`a.${number}.c`>().toEqualTypeOf<JoinProperties<["a", number, "c"]>>();
 // test ResolveIndexable
 
 // test LazyPropertyPath
-expected<"pet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
-	LazyPropertyPath<Person, "">
->();
-expected<"pet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
-	LazyPropertyPath<Person, "roles">
->();
-expected<"pet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
-	LazyPropertyPath<Person, "ro">
->();
-expected<"Input a number">().toEqualTypeOf<LazyPropertyPath<Person, "roles.">>();
-expected<"pet." | "pet.name" | "pet.age">().toEqualTypeOf<LazyPropertyPath<Person, "pet.">>();
-expected<`roles.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "roles.0">>();
-expected<`Index error: tried to index an array element through a string`>().toEqualTypeOf<
-	LazyPropertyPath<Person, "roles.a">
->();
-expected<"Access error: cannot access this path">().toEqualTypeOf<
-	LazyPropertyPath<Person, "roles.0.">
->();
-expected<`children.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "children.0">>();
-expected<`children.0.name` | `children.0.age` | "children.0.">().toEqualTypeOf<
-	LazyPropertyPath<Person, "children.0.">
->();
-expected<`children.0.name` | `children.0.age`>().toEqualTypeOf<
-	LazyPropertyPath<Person, "children.0.name">
->();
-expected<"Access error: cannot access this path">().toEqualTypeOf<
-	LazyPropertyPath<Person, "children.0.name.">
->();
+
+const testTopLevelResolution = [
+	expected<keyof Person>().toEqualTypeOf<LazyPropertyPath<Person, "">>(),
+	expected<keyof Person>().toEqualTypeOf<LazyPropertyPath<Person, "roles">>(),
+	expected<keyof Person>().toEqualTypeOf<LazyPropertyPath<Person, "ro">>(),
+];
+
+const testTrailingDot = [
+	expected<"Input a number">().toEqualTypeOf<LazyPropertyPath<Person, "roles.">>(),
+	expected<"pet." | `pet.${keyof Person["pet"]}`>().toEqualTypeOf<
+		LazyPropertyPath<Person, "pet.">
+	>(),
+	expected<"children.0." | `children.0.${keyof Person["children"]["0"]}`>().toEqualTypeOf<
+		LazyPropertyPath<Person, "children.0.">
+	>(),
+	expected<"Access error: cannot access this path">().toEqualTypeOf<
+		LazyPropertyPath<Person, "roles.0.">
+	>(),
+	expected<"Access error: cannot access this path">().toEqualTypeOf<
+		LazyPropertyPath<Person, "pet.name.">
+	>(),
+];
+
+const testNestedResolution = [
+	expected<`roles.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "roles.0">>(),
+	expected<`children.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "children.0">>(),
+	expected<`children.0.name` | `children.0.age`>().toEqualTypeOf<
+		LazyPropertyPath<Person, "children.0.name">
+	>(),
+	expected<`Index error: tried to index an array element through a string`>().toEqualTypeOf<
+		LazyPropertyPath<Person, "roles.a">
+	>(),
+];
 
 // test ParsePropertyPath
 
