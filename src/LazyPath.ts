@@ -7,6 +7,23 @@ type ConcatStrings<S1 extends string, S2 extends string, Separator extends strin
 		:	S2
 	: S2 extends "" ? S1
 	: `${S1}${Separator}${S2}`;
+type SplitString<S extends string, Separator extends string> =
+	S extends `${infer Prev}${Separator}${infer Rest}` ? [Prev, ...SplitString<Rest, Separator>]
+	:	[S];
+
+type AllButLastArrayElement<T extends readonly unknown[]> =
+	T extends [infer F, ...infer R] ?
+		R extends [] ?
+			[]
+		:	[F, ...AllButLastArrayElement<R>]
+	:	[];
+
+type LastArrayElement<T extends readonly unknown[]> =
+	T extends [infer F, ...infer R] ?
+		R extends [] ?
+			F
+		:	LastArrayElement<R>
+	:	never;
 
 type Property = string | number;
 type JoinProperties<Properties extends Property[]> =
@@ -31,19 +48,8 @@ type GetLastChar<T extends string> =
 type EndsOn<S extends string, LastChar extends string> =
 	[GetLastChar<S>, LastChar] extends [LastChar, GetLastChar<S>] ? true : false;
 
-type Person = {
-	favoritePet: {
-		petName: "Fido";
-		petAge: 4;
-	};
-	roles: ["admin", "user"];
-	children: [{ childName: "Alice"; childAge: 5 }, { childName: "Marco"; childAge: 10 }];
-	favoriteColor: "green";
-	age: 30;
-};
+type Person = typeof person;
 
-type ParsePropertyPath<S extends string> =
-	S extends `${infer Prev}.${infer Rest}` ? [Prev, ...ParsePropertyPath<Rest>] : [];
 type LastPropertyPath<S extends string> =
 	S extends `${infer Prev}.${infer Rest}` ? LastPropertyPath<Rest> : S;
 type Cast<T, U> = T extends U ? T : U;
@@ -59,7 +65,9 @@ type IsValidNumeric<String> =
 type LazyPropertyPath<
 	Obj,
 	Path extends string,
-	Properties extends Property[] = ParsePropertyPath<Path>,
+	Properties extends Property[] = SplitString<Path, ".">,
+	AllButLastProperties extends Property[] = AllButLastArrayElement<Properties>,
+	LastProperty extends Property = LastArrayElement<Properties>,
 	ResolvedObj = GetObjectFromProperties<Obj, Properties>,
 	PathEndsOnDot extends boolean = EndsOn<Path, ".">,
 	IsNum extends boolean = IsValidNumeric<Cast<LastPropertyPath<Path>, string>>,
@@ -78,19 +86,22 @@ type LazyPropertyPath<
 type DebugLazyPropertyPath<
 	Obj,
 	Path extends string,
-	Properties extends Property[] = ParsePropertyPath<Path>,
+	Properties extends Property[] = SplitString<Path, ".">,
+	AllButLastProperties extends Property[] = AllButLastArrayElement<Properties>,
 	ResolvedObj = GetObjectFromProperties<Obj, Properties>,
 	PathEndsOnDot extends boolean = EndsOn<Path, ".">,
+	IsNum extends boolean = IsValidNumeric<Cast<LastPropertyPath<Path>, string>>,
 > = {
 	Properties: Properties;
 	ResolvedObj: ResolvedObj;
 	Return: LazyPropertyPath<Obj, Path>;
 	PathEndsOnDot: PathEndsOnDot;
 	Condition: EndsOn<Path, ".">;
+	AllButLastProperties: AllButLastProperties;
 };
 /*   DEBUGGING   */
 
-type path = "roles.a";
+type path = "roles.0";
 type _0 = LazyPropertyPath<Person, path>;
 type _1 = DebugLazyPropertyPath<Person, path>;
 
@@ -110,12 +121,11 @@ const person = {
 	age: 30,
 } as const;
 
-declare function get<path extends string, Obj>(
-	obj: Obj,
-	path: LazyPropertyPath<Obj, path>
-): LazyPropertyPath<Obj, path>;
+type lel = keyof typeof person;
 
-const test2 = get(person, "roles.0.");
+declare function get<path extends string, Obj>(obj: Obj, path: LazyPropertyPath<Obj, path>): any;
+
+const test2 = get(person, "age");
 
 /*   TESTS   */
 // test ConcatStrings
@@ -200,8 +210,21 @@ expectTypeOf<"Access error: cannot access this path">().toEqualTypeOf<
 	LazyPropertyPath<Person, "children.0.childName.">
 >();
 
+// test AllButLastArrayElement
+expectTypeOf<[]>().toEqualTypeOf<AllButLastArrayElement<[]>>();
+expectTypeOf<[]>().toEqualTypeOf<AllButLastArrayElement<["a"]>>();
+expectTypeOf<["a"]>().toEqualTypeOf<AllButLastArrayElement<["a", "b"]>>();
+
+// test LastArrayElement
+expectTypeOf<never>().toEqualTypeOf<LastArrayElement<[]>>();
+expectTypeOf<"a">().toEqualTypeOf<LastArrayElement<["a"]>>();
+expectTypeOf<"b">().toEqualTypeOf<LastArrayElement<["a", "b"]>>();
+expectTypeOf<"c">().toEqualTypeOf<LastArrayElement<["a", "b", "c"]>>();
+
 // test ParsePropertyPath
-expectTypeOf<[]>().toEqualTypeOf<ParsePropertyPath<"roles">>();
-expectTypeOf<["roles"]>().toEqualTypeOf<ParsePropertyPath<"roles.">>();
-expectTypeOf<["roles"]>().toEqualTypeOf<ParsePropertyPath<"roles.0">>();
-expectTypeOf<["children", "0"]>().toEqualTypeOf<ParsePropertyPath<"children.0.childName">>();
+expectTypeOf<[]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"roles", ".">>>();
+expectTypeOf<["roles"]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"roles.", ".">>>();
+expectTypeOf<["roles"]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"roles.0", ".">>>();
+expectTypeOf<["children", "0"]>().toEqualTypeOf<
+	AllButLastArrayElement<SplitString<"children.0.childName", ".">>
+>();
