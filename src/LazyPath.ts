@@ -9,7 +9,8 @@ type ConcatStrings<S1 extends string, S2 extends string, Separator extends strin
 	: `${S1}${Separator}${S2}`;
 type SplitString<S extends string, Separator extends string> =
 	S extends `${infer Prev}${Separator}${infer Rest}` ? [Prev, ...SplitString<Rest, Separator>]
-	:	[S];
+	: S extends "" ? []
+	: [S];
 
 type AllButLastArrayElement<T extends readonly unknown[]> =
 	T extends [infer F, ...infer R] ?
