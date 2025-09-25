@@ -258,14 +258,14 @@ type _1 = DebugLazyPropertyPath<Person, path>;
 /*   IMPLEMENTATION   */
 
 const person = {
-	favoritePet: {
-		petName: "Fido",
-		petAge: 4,
+	pet: {
+		name: "Fido",
+		age: 4,
 	},
 	roles: ["admin", "user"],
 	children: [
-		{ childName: "Alice", childAge: 5 },
-		{ childName: "Marco", childAge: 10 },
+		{ name: "Alice", age: 5 },
+		{ name: "Marco", age: 10 },
 	],
 	favoriteColor: "green",
 	age: 30,
@@ -279,7 +279,7 @@ declare function get<
 	Properties extends string[] = $String.Split<Path, ".">,
 >(obj: Obj, Path: LazyPropertyPath<Obj, Path>): $Object.PropertyPathLookup<Obj, Properties>;
 
-const test2 = get(person, "favoritePet.petName");
+const test2 = get(person, "pet.");
 
 /*   TESTS   */
 // test ConcatStrings
@@ -302,16 +302,17 @@ expected<`a.${number}.c`>().toEqualTypeOf<JoinProperties<["a", number, "c"]>>();
 // test ResolveIndexable
 
 // test LazyPropertyPath
-expected<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
+expected<"pet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
 	LazyPropertyPath<Person, "">
 >();
-expected<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
+expected<"pet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
 	LazyPropertyPath<Person, "roles">
 >();
-expected<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
+expected<"pet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
 	LazyPropertyPath<Person, "ro">
 >();
 expected<"Input a number">().toEqualTypeOf<LazyPropertyPath<Person, "roles.">>();
+expected<"pet." | "pet.name" | "pet.age">().toEqualTypeOf<LazyPropertyPath<Person, "pet.">>();
 expected<`roles.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "roles.0">>();
 expected<`Index error: tried to index an array element through a string`>().toEqualTypeOf<
 	LazyPropertyPath<Person, "roles.a">
@@ -320,14 +321,14 @@ expected<"Access error: cannot access this path">().toEqualTypeOf<
 	LazyPropertyPath<Person, "roles.0.">
 >();
 expected<`children.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "children.0">>();
-expected<`children.0.childName` | `children.0.childAge` | "children.0.">().toEqualTypeOf<
+expected<`children.0.name` | `children.0.age` | "children.0.">().toEqualTypeOf<
 	LazyPropertyPath<Person, "children.0.">
 >();
-expected<`children.0.childName` | `children.0.childAge`>().toEqualTypeOf<
-	LazyPropertyPath<Person, "children.0.childName">
+expected<`children.0.name` | `children.0.age`>().toEqualTypeOf<
+	LazyPropertyPath<Person, "children.0.name">
 >();
 expected<"Access error: cannot access this path">().toEqualTypeOf<
-	LazyPropertyPath<Person, "children.0.childName.">
+	LazyPropertyPath<Person, "children.0.name.">
 >();
 
 // test ParsePropertyPath
@@ -344,5 +345,5 @@ expected<Person["roles"]>().toEqualTypeOf<GetFromProperties<Person, SplitString<
 expected<["roles"]>().toEqualTypeOf<GetFromProperties<Person, SplitString<"roles.", ".">>>();
 expected<["roles", "0"]>().toEqualTypeOf<GetFromProperties<Person, SplitString<"roles.0", ".">>>();
 expected<["children", "0"]>().toEqualTypeOf<
-	GetFromProperties<Person, SplitString<"children.0.childName", ".">>
+	GetFromProperties<Person, SplitString<"children.0.name", ".">>
 >();
