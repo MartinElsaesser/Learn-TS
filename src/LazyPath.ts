@@ -211,38 +211,38 @@ type IsValidNumeric<String> =
 type LazyPropertyPath<
 	Obj,
 	Path extends string,
-	Properties extends string[] = $String.Split<Path, ".">,
-	LastProperty extends string = $Array.OnlyLastElement<Properties>,
-	AllButLastProperties extends string[] = $Array.ExcludeLastElement<Properties>,
-	SubObj = $Object.PropertyPathLookupOnlyObjects<Obj, AllButLastProperties>,
-	PathEndsOnDot extends boolean = $String.EndsOn<Path, ".">,
+	_Properties extends string[] = $String.Split<Path, ".">,
+	_LastProperty extends string = $Array.OnlyLastElement<_Properties>,
+	_AllButLastProperties extends string[] = $Array.ExcludeLastElement<_Properties>,
+	_SubObj = $Object.PropertyPathLookupOnlyObjects<Obj, _AllButLastProperties>,
+	_PathEndsOnDot extends boolean = $String.EndsOn<Path, ".">,
 > =
-	[SubObj] extends [never] ? "Access error: cannot access this path"
-	: SubObj extends readonly any[] ?
-		LastProperty extends `${number}` ?
+	[_SubObj] extends [never] ? "Access error: cannot access this path"
+	: _SubObj extends readonly any[] ?
+		_LastProperty extends `${number}` ?
 			IntersectionMerge<
 				Path,
-				JoinProperties<[...AllButLastProperties, number]>,
-				PathEndsOnDot
+				JoinProperties<[..._AllButLastProperties, number]>,
+				_PathEndsOnDot
 			>
-		: LastProperty extends "" ? "Input a number"
+		: _LastProperty extends "" ? "Input a number"
 		: "Index error: tried to index an array element through a string"
-	:	JoinProperties<[...AllButLastProperties, Cast<keyof SubObj, string>]>;
+	:	JoinProperties<[..._AllButLastProperties, Cast<keyof _SubObj, string>]>;
 
 type DebugLazyPropertyPath<
 	Obj,
 	Path extends string,
-	Properties extends string[] = $String.Split<Path, ".">,
-	LastProperty extends string = $Array.OnlyLastElement<Properties>,
-	AllButLastProperties extends string[] = $Array.ExcludeLastElement<Properties>,
-	SubObj = $Object.PropertyPathLookupOnlyObjects<Obj, AllButLastProperties>,
-	PathEndsOnDot extends boolean = $String.EndsOn<Path, ".">,
+	_Properties extends string[] = $String.Split<Path, ".">,
+	_LastProperty extends string = $Array.OnlyLastElement<_Properties>,
+	_AllButLastProperties extends string[] = $Array.ExcludeLastElement<_Properties>,
+	_SubObj = $Object.PropertyPathLookupOnlyObjects<Obj, _AllButLastProperties>,
+	_PathEndsOnDot extends boolean = $String.EndsOn<Path, ".">,
 > = {
-	Properties: Properties;
-	LastProperty: LastProperty;
-	AllButLastProperties: AllButLastProperties;
-	SubObj: SubObj;
-	PathEndsOnDot: PathEndsOnDot;
+	_Properties: _Properties;
+	_LastProperty: _LastProperty;
+	_AllButLastProperties: _AllButLastProperties;
+	_SubObj: _SubObj;
+	_PathEndsOnDot: _PathEndsOnDot;
 };
 /*   DEBUGGING   */
 
