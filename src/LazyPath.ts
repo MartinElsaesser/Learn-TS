@@ -187,10 +187,10 @@ namespace $Object {
 		expected<never>().toEqualTypeOf<PropertyPathLookup<TestPerson, ["doesNotExist"]>>(),
 	];
 }
-
-type JoinProperties<Properties extends PropertyKey[]> =
-	Properties extends [infer F extends PropertyKey, ...infer R extends PropertyKey[]] ?
-		$String.Join<F, ".", JoinProperties<R>>
+type Prop = string | number;
+type JoinProperties<Properties extends Prop[]> =
+	Properties extends [infer F extends Prop, ...infer R extends Prop[]] ?
+		$String.Join<`${F}`, ".", JoinProperties<R>>
 	:	"";
 
 type ReturnIfIsObject<T> = T extends object ? T : never;
