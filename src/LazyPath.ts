@@ -68,17 +68,17 @@ type LazyPropertyPath<
 	AllButLastProperties extends string[] = AllButLastArrayElement<Properties>,
 	SubObj = GetObjectFromProperties<Obj, AllButLastProperties>,
 	PathEndsOnDot extends boolean = EndsOn<Path, ".">,
-	IsNum extends boolean = IsValidNumeric<LastProperty>,
 > =
 	[SubObj] extends [never] ? "Access error: cannot access this path"
 	: SubObj extends readonly any[] ?
-		IsNum extends true ?
+		LastProperty extends `${number}` ?
 			IntersectionMerge<
 				Path,
 				JoinProperties<[...AllButLastProperties, number]>,
 				PathEndsOnDot
 			>
-		:	"Index error: tried to index an array element through a string"
+		: LastProperty extends "" ? "Input a number"
+		: "Index error: tried to index an array element through a string"
 	:	IntersectionMerge<
 			Path,
 			JoinProperties<[...AllButLastProperties, Cast<keyof SubObj, string>]>,
@@ -128,7 +128,7 @@ type lel = keyof typeof person;
 
 declare function get<path extends string, Obj>(obj: Obj, path: LazyPropertyPath<Obj, path>): any;
 
-const test2 = get(person, "age");
+const test2 = get(person, "children.0.childName");
 
 /*   TESTS   */
 // test ConcatStrings
