@@ -39,6 +39,13 @@ type GetObjectFromProperties<Obj, Properties extends Property[]> =
 			GetObjectFromProperties<Obj[F], R>
 		:	never
 	:	ReturnIfIsObject<Obj>;
+
+type GetFromProperties<Obj, Properties extends string[]> =
+	Properties extends [infer F, ...infer R extends string[]] ?
+		F extends keyof Obj ?
+			GetObjectFromProperties<Obj[F], R>
+		:	F
+	:	Obj;
 type GetLastChar<T extends string> =
 	T extends `${infer F}${infer R}` ?
 		R extends "" ?
@@ -126,9 +133,13 @@ const person = {
 
 type lel = keyof typeof person;
 
-declare function get<path extends string, Obj>(obj: Obj, path: LazyPropertyPath<Obj, path>): any;
+declare function get<
+	Path extends string,
+	Obj,
+	Properties extends string[] = SplitString<Path, ".">,
+>(obj: Obj, Path: LazyPropertyPath<Obj, Path>): GetFromProperties<Obj, Properties>;
 
-const test2 = get(person, "children.0.childName");
+const test2 = get(person, "favoritePet.petAge");
 
 /*   TESTS   */
 // test ConcatStrings
@@ -189,7 +200,7 @@ expectTypeOf<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().t
 expectTypeOf<"favoritePet" | "favoriteColor" | "age" | "roles" | "children">().toEqualTypeOf<
 	LazyPropertyPath<Person, "ro">
 >();
-expectTypeOf<`roles.${number}` | "roles.">().toEqualTypeOf<LazyPropertyPath<Person, "roles.">>();
+expectTypeOf<"Input a number">().toEqualTypeOf<LazyPropertyPath<Person, "roles.">>();
 expectTypeOf<`roles.${number}`>().toEqualTypeOf<LazyPropertyPath<Person, "roles.0">>();
 expectTypeOf<`Index error: tried to index an array element through a string`>().toEqualTypeOf<
 	LazyPropertyPath<Person, "roles.a">
@@ -220,9 +231,29 @@ expectTypeOf<"b">().toEqualTypeOf<LastArrayElement<["a", "b"]>>();
 expectTypeOf<"c">().toEqualTypeOf<LastArrayElement<["a", "b", "c"]>>();
 
 // test ParsePropertyPath
+expectTypeOf<[]>().toEqualTypeOf<SplitString<"", ".">>();
+expectTypeOf<["a"]>().toEqualTypeOf<SplitString<"a", ".">>();
+expectTypeOf<["a", "b"]>().toEqualTypeOf<SplitString<"a.b", ".">>();
+expectTypeOf<["a", "b", "c"]>().toEqualTypeOf<SplitString<"a.b.c", ".">>();
+expectTypeOf<["a"]>().toEqualTypeOf<SplitString<"a.", ".">>();
+expectTypeOf<["a", "b"]>().toEqualTypeOf<SplitString<"a.b.", ".">>();
+
+// test ParsePropertyPath
 expectTypeOf<[]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"roles", ".">>>();
 expectTypeOf<["roles"]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"roles.", ".">>>();
 expectTypeOf<["roles"]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"roles.0", ".">>>();
 expectTypeOf<["children", "0"]>().toEqualTypeOf<
 	AllButLastArrayElement<SplitString<"children.0.childName", ".">>
+>();
+
+// test GetFromProperties
+expectTypeOf<Person["roles"]>().toEqualTypeOf<
+	GetFromProperties<Person, SplitString<"roles", ".">>
+>();
+expectTypeOf<["roles"]>().toEqualTypeOf<GetFromProperties<Person, SplitString<"roles.", ".">>>();
+expectTypeOf<["roles", "0"]>().toEqualTypeOf<
+	GetFromProperties<Person, SplitString<"roles.0", ".">>
+>();
+expectTypeOf<["children", "0"]>().toEqualTypeOf<
+	GetFromProperties<Person, SplitString<"children.0.childName", ".">>
 >();
