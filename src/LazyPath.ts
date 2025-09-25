@@ -274,7 +274,8 @@ declare function get<
 	Properties extends string[] = $String.Split<Path, ".">,
 >(obj: Obj, Path: LazyPropertyPath<Obj, Path>): $Object.PropertyPathLookup<Obj, Properties>;
 
-const test2 = get(person, "children.0.name");
+const test2 = get(person, "children.0");
+//    ^?
 
 /*   TESTS   */
 // test ConcatStrings
