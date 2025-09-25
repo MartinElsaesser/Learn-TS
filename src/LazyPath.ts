@@ -188,10 +188,9 @@ namespace $Object {
 	];
 }
 
-type Property = string | number;
 type JoinProperties<Properties extends PropertyKey[]> =
-	Properties extends [infer F extends Property, ...infer R extends Property[]] ?
-		$String.Join<`${F}`, ".", JoinProperties<R>>
+	Properties extends [infer F extends PropertyKey, ...infer R extends PropertyKey[]] ?
+		$String.Join<F, ".", JoinProperties<R>>
 	:	"";
 
 type ReturnIfIsObject<T> = T extends object ? T : never;
@@ -228,11 +227,7 @@ type LazyPropertyPath<
 			>
 		: LastProperty extends "" ? "Input a number"
 		: "Index error: tried to index an array element through a string"
-	:	IntersectionMerge<
-			Path,
-			JoinProperties<[...AllButLastProperties, Cast<keyof SubObj, string>]>,
-			PathEndsOnDot
-		>;
+	:	JoinProperties<[...AllButLastProperties, Cast<keyof SubObj, string>]>;
 
 type DebugLazyPropertyPath<
 	Obj,
@@ -279,7 +274,7 @@ declare function get<
 	Properties extends string[] = $String.Split<Path, ".">,
 >(obj: Obj, Path: LazyPropertyPath<Obj, Path>): $Object.PropertyPathLookup<Obj, Properties>;
 
-const test2 = get(person, "pet.");
+const test2 = get(person, "children.0.name");
 
 /*   TESTS   */
 // test ConcatStrings
@@ -311,10 +306,9 @@ const testTopLevelResolution = [
 
 const testTrailingDot = [
 	expected<"Input a number">().toEqualTypeOf<LazyPropertyPath<Person, "roles.">>(),
-	expected<"pet." | `pet.${keyof Person["pet"]}`>().toEqualTypeOf<
-		LazyPropertyPath<Person, "pet.">
-	>(),
-	expected<"children.0." | `children.0.${keyof Person["children"]["0"]}`>().toEqualTypeOf<
+	expected<"Input a number">().toEqualTypeOf<LazyPropertyPath<Person, "children.">>(),
+	expected<`pet.${keyof Person["pet"]}`>().toEqualTypeOf<LazyPropertyPath<Person, "pet.">>(),
+	expected<`children.0.${keyof Person["children"]["0"]}`>().toEqualTypeOf<
 		LazyPropertyPath<Person, "children.0.">
 	>(),
 	expected<"Access error: cannot access this path">().toEqualTypeOf<
@@ -336,19 +330,20 @@ const testNestedResolution = [
 	>(),
 ];
 
-// test ParsePropertyPath
+expected<[]>().toEqualTypeOf<$Array.ExcludeLastElement<$String.Split<"a", ".">>>();
+expected<["a"]>().toEqualTypeOf<$Array.ExcludeLastElement<$String.Split<"a.", ".">>>();
+expected<["a"]>().toEqualTypeOf<$Array.ExcludeLastElement<$String.Split<"a.b", ".">>>();
+expected<["a", "b"]>().toEqualTypeOf<$Array.ExcludeLastElement<$String.Split<"a.b.", ".">>>();
+expected<["a", "b"]>().toEqualTypeOf<$Array.ExcludeLastElement<$String.Split<"a.b.c", ".">>>();
 
-// test ParsePropertyPath
-expected<[]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"a", ".">>>();
-expected<[]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"a.", ".">>>();
-expected<["a"]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"a.b", ".">>>();
-expected<["a"]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"a.b.", ".">>>();
-expected<["a", "b"]>().toEqualTypeOf<AllButLastArrayElement<SplitString<"a.b.c", ".">>>();
-
-// test GetFromProperties
-expected<Person["roles"]>().toEqualTypeOf<GetFromProperties<Person, SplitString<"roles", ".">>>();
-expected<["roles"]>().toEqualTypeOf<GetFromProperties<Person, SplitString<"roles.", ".">>>();
-expected<["roles", "0"]>().toEqualTypeOf<GetFromProperties<Person, SplitString<"roles.0", ".">>>();
-expected<["children", "0"]>().toEqualTypeOf<
-	GetFromProperties<Person, SplitString<"children.0.name", ".">>
+// test $Object.PropertyPathLookup
+expected<Person["roles"]>().toEqualTypeOf<
+	$Object.PropertyPathLookup<Person, $String.Split<"roles", ".">>
+>();
+expected<never>().toEqualTypeOf<$Object.PropertyPathLookup<Person, $String.Split<"roles.", ".">>>();
+expected<Person["roles"]["0"]>().toEqualTypeOf<
+	$Object.PropertyPathLookup<Person, $String.Split<"roles.0", ".">>
+>();
+expected<Person["children"]["0"]["name"]>().toEqualTypeOf<
+	$Object.PropertyPathLookup<Person, $String.Split<"children.0.name", ".">>
 >();
