@@ -5,7 +5,8 @@
 	"main": "index.js",
 	"scripts": {
 		"prettier:fix": "prettier --write .",
-		"prettier:check": "prettier --check ."
+		"prettier:check": "prettier --check .",
+		"test": "vitest"
 	},
 	"keywords": [],
 	"author": "",
@@ -13,9 +14,11 @@
 	"type": "module",
 	"devDependencies": {
 		"tsx": "^4.20.5",
-		"typescript": "^5.9.2"
+		"typescript": "^5.9.2",
+		"vitest": "^3.2.4"
 	},
 	"dependencies": {
+		"@ark/attest": "^0.49.0",
 		"expect-type": "^1.2.2",
 		"prettier": "^3.6.2"
 	}
