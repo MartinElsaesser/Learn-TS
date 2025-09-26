@@ -6,6 +6,7 @@
 	"scripts": {
 		"prettier:fix": "prettier --write .",
 		"prettier:check": "prettier --check .",
+		"trace": "attest trace .",
 		"test": "vitest"
 	},
 	"keywords": [],
