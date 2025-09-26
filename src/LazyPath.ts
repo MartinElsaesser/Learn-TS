@@ -9,7 +9,7 @@ namespace $String {
 		: S2 extends "" ? S1
 		: `${S1}${Separator}${S2}`;
 
-	[
+	const testSuite1 = [
 		expected<"">().toEqualTypeOf<Join<"", ".", "">>(),
 		expected<"a">().toEqualTypeOf<Join<"a", ".", "">>(),
 		expected<"b">().toEqualTypeOf<Join<"", ".", "b">>(),
@@ -20,7 +20,7 @@ namespace $String {
 	export type Split<S extends string, Separator extends string> =
 		S extends `${infer Prev}${Separator}${infer Rest}` ? [Prev, ...Split<Rest, Separator>]
 		:	[S];
-	[
+	const testSuite2 = [
 		expected<[""]>().toEqualTypeOf<Split<"", ".">>(),
 		expected<["a"]>().toEqualTypeOf<Split<"a", ".">>(),
 		expected<["a", "b", "c"]>().toEqualTypeOf<Split<"a.b.c", ".">>(),
@@ -35,7 +35,7 @@ namespace $String {
 		S extends `${infer Prev}${Separator}${infer Rest}` ?
 			[Prev, ...SplitExceptTrailingEmpty<Rest, Separator>]
 		:	TupleWithoutEmptyString<S>;
-	[
+	const testSuite3 = [
 		expected<[]>().toEqualTypeOf<SplitExceptTrailingEmpty<"", ".">>(),
 		expected<["a"]>().toEqualTypeOf<SplitExceptTrailingEmpty<"a", ".">>(),
 		expected<["a", "b", "c"]>().toEqualTypeOf<SplitExceptTrailingEmpty<"a.b.c", ".">>(),
@@ -51,7 +51,7 @@ namespace $String {
 			[...TupleWithoutEmptyString<Prev>, ...SplitWithoutEmpty<Rest, Separator>]
 		:	TupleWithoutEmptyString<S>;
 
-	[
+	const testSuite4 = [
 		expected<[]>().toEqualTypeOf<SplitWithoutEmpty<"", ".">>(),
 		expected<["a"]>().toEqualTypeOf<SplitWithoutEmpty<"a", ".">>(),
 		expected<["a", "b", "c"]>().toEqualTypeOf<SplitWithoutEmpty<"a.b.c", ".">>(),
@@ -68,7 +68,7 @@ namespace $String {
 				F
 			:	GetLastChar<R>
 		:	never;
-	[
+	const testSuite5 = [
 		expected<never>().toEqualTypeOf<GetLastChar<"">>(),
 		expected<"a">().toEqualTypeOf<GetLastChar<"a">>(),
 		expected<"b">().toEqualTypeOf<GetLastChar<"ab">>(),
@@ -81,7 +81,7 @@ namespace $String {
 			true
 		:	false;
 
-	[
+	const testSuite6 = [
 		expected<true>().toEqualTypeOf<EndsOn<"", "">>(),
 		expected<true>().toEqualTypeOf<EndsOn<"a", "a">>(),
 		expected<true>().toEqualTypeOf<EndsOn<"ab", "b">>(),
@@ -100,7 +100,7 @@ namespace $Array {
 			:	[F, ...ExcludeLastElement<R>]
 		:	[];
 
-	[
+	const testSuite1 = [
 		expected<[]>().toEqualTypeOf<ExcludeLastElement<[]>>(),
 		expected<[]>().toEqualTypeOf<ExcludeLastElement<["a"]>>(),
 		expected<["a"]>().toEqualTypeOf<ExcludeLastElement<["a", "b"]>>(),
@@ -113,7 +113,7 @@ namespace $Array {
 			:	OnlyLastElement<R>
 		:	never;
 
-	[
+	const testSuite2 = [
 		expected<never>().toEqualTypeOf<OnlyLastElement<[]>>(),
 		expected<"a">().toEqualTypeOf<OnlyLastElement<["a"]>>(),
 		expected<"b">().toEqualTypeOf<OnlyLastElement<["a", "b"]>>(),
@@ -297,26 +297,22 @@ const test2 = get(person, "children.3");
 console.log(test2);
 
 /*   TESTS   */
-// test ConcatStrings
+const testIsNumeric = [
+	expected<true>().toEqualTypeOf<IsValidNumeric<"0">>(),
+	expected<true>().toEqualTypeOf<IsValidNumeric<"1">>(),
+	expected<true>().toEqualTypeOf<IsValidNumeric<"1000">>(),
+	expected<true>().toEqualTypeOf<IsValidNumeric<"-2">>(),
+	expected<false>().toEqualTypeOf<IsValidNumeric<"a">>(),
+	expected<false>().toEqualTypeOf<IsValidNumeric<"pet">>(),
+];
 
-// test IsNumeric
-expected<true>().toEqualTypeOf<IsValidNumeric<"0">>();
-expected<true>().toEqualTypeOf<IsValidNumeric<"1">>();
-expected<true>().toEqualTypeOf<IsValidNumeric<"1000">>();
-expected<true>().toEqualTypeOf<IsValidNumeric<"-2">>();
-expected<false>().toEqualTypeOf<IsValidNumeric<"a">>();
-expected<false>().toEqualTypeOf<IsValidNumeric<"pet">>();
-
-// test JoinProperties
-expected<"">().toEqualTypeOf<JoinProperties<[""]>>();
-expected<"a">().toEqualTypeOf<JoinProperties<["a"]>>();
-expected<"a.b">().toEqualTypeOf<JoinProperties<["a", "b"]>>();
-expected<"a.b.c">().toEqualTypeOf<JoinProperties<["a", "b", "c"]>>();
-expected<`a.${number}.c`>().toEqualTypeOf<JoinProperties<["a", number, "c"]>>();
-
-// test ResolveIndexable
-
-// test LazyPropertyPath
+const testJoinProperties = [
+	expected<"">().toEqualTypeOf<JoinProperties<[""]>>(),
+	expected<"a">().toEqualTypeOf<JoinProperties<["a"]>>(),
+	expected<"a.b">().toEqualTypeOf<JoinProperties<["a", "b"]>>(),
+	expected<"a.b.c">().toEqualTypeOf<JoinProperties<["a", "b", "c"]>>(),
+	expected<`a.${number}.c`>().toEqualTypeOf<JoinProperties<["a", number, "c"]>>(),
+];
 
 const testTopLevelResolution = [
 	expected<keyof Person>().toEqualTypeOf<LazyPropertyPath<Person, "">>(),
