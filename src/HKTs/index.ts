@@ -14,11 +14,20 @@ type Apply<F extends HKT, _1> = ReturnType<
 	})["func"]
 >;
 
+type HKTInput<F extends HKT> = Parameters<F["func"]>[0];
+
+// implementation
+
 interface DoubleString extends HKT {
 	func: (x: Cast<this["_1"], string>) => `${typeof x}${typeof x}`;
 }
 
-type dbl = DoubleString;
+type MapTuple<Arr extends HKTInput<F>[], F extends HKT> = {
+	[K in keyof Arr]: Apply<F, Arr[K]>;
+};
 
-type Result = Apply<DoubleString, "hi!">;
+type doubledString = Apply<DoubleString, "hi!">;
+//    ^?
+
+type mappedDoubleString = MapTuple<["a", "b"], DoubleString>;
 //    ^?
