@@ -1,9 +1,9 @@
 // source: https://code.lol/post/programming/higher-kinded-types/
 type GenericFunction = (...x: never[]) => unknown;
 
-abstract class HKT {
+interface HKT {
 	readonly _1?: unknown;
-	new?: GenericFunction;
+	func: GenericFunction;
 }
 
 type Cast<T, U> = T extends U ? T : U;
@@ -11,12 +11,14 @@ type Cast<T, U> = T extends U ? T : U;
 type Apply<F extends HKT, _1> = ReturnType<
 	(F & {
 		readonly _1: _1;
-	})["new"]
+	})["func"]
 >;
 
 interface DoubleString extends HKT {
-	new: (x: Cast<this["_1"], string>) => `${typeof x}${typeof x}`;
+	func: (x: Cast<this["_1"], string>) => `${typeof x}${typeof x}`;
 }
+
+type dbl = DoubleString;
 
 type Result = Apply<DoubleString, "hi!">;
 //    ^?
