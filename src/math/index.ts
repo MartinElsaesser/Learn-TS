@@ -35,13 +35,17 @@ type Num = Repeat<"3">;
 // 1.01 + 1.19 => 2.20
 // 101(2) + 119(2) => 220
 
-type ParseNum<Num> = Num extends `${infer Parsed extends number}` ? Parsed : never;
-type N1 = ParseNum<"101.69">;
-//   ^?
-type N2 = ParseNum<"101.70">;
-//   ^?
-type N4 = ParseNum<"01">;
-//   ^?
+type ParseStringToNum<Num extends string> =
+	Num extends `${infer Parsed extends number}` ? Parsed : never;
+
+type ToNumber<Num extends string | number> = Num extends string ? ParseStringToNum<Num> : Num;
+
+expectTypeOf<101.69>().toEqualTypeOf<ToNumber<"101.69">>();
+expectTypeOf<101.69>().toEqualTypeOf<ToNumber<101.69>>();
+// @ts-expect-error
+expectTypeOf<101.7>().toEqualTypeOf<ToNumber<"101.70">>();
+// @ts-expect-error
+expectTypeOf<1>().toEqualTypeOf<ToNumber<"01">>();
 
 // 1.5 + 1.15 => 1.65
 // 15(1) + 115(2)
