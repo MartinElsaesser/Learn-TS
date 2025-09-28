@@ -10,6 +10,7 @@ const testSuite1 = [
 	expected<[]>().toEqualTypeOf<ExcludeLastElement<[]>>(),
 	expected<[]>().toEqualTypeOf<ExcludeLastElement<["a"]>>(),
 	expected<["a"]>().toEqualTypeOf<ExcludeLastElement<["a", "b"]>>(),
+	expected<["a", "b", "c", "d"]>().toEqualTypeOf<ExcludeLastElement<["a", "b", "c", "d", "e"]>>(),
 ];
 
 export type OnlyLastElement<T extends readonly unknown[]> =
@@ -23,5 +24,5 @@ const testSuite2 = [
 	expected<never>().toEqualTypeOf<OnlyLastElement<[]>>(),
 	expected<"a">().toEqualTypeOf<OnlyLastElement<["a"]>>(),
 	expected<"b">().toEqualTypeOf<OnlyLastElement<["a", "b"]>>(),
-	expected<"c">().toEqualTypeOf<OnlyLastElement<["a", "b", "c"]>>(),
+	expected<"e">().toEqualTypeOf<OnlyLastElement<["a", "b", "c", "d", "e"]>>(),
 ];
