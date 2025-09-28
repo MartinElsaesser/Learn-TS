@@ -12,6 +12,13 @@ export type Or<Bool1 extends boolean, Bool2 extends boolean> =
 		:	true
 	: Bool2 extends true ? true
 	: false;
+export type Xor<Bool1 extends boolean, Bool2 extends boolean> =
+	Bool1 extends true ?
+		Bool2 extends true ?
+			false
+		:	true
+	: Bool2 extends true ? true
+	: false;
 
 export type Not<Bool extends boolean> = Bool extends true ? false : true;
 
@@ -26,6 +33,12 @@ const testOr = [
 	expected<true>().toEqualTypeOf<Or<true, false>>(),
 	expected<true>().toEqualTypeOf<Or<false, true>>(),
 	expected<false>().toEqualTypeOf<Or<false, false>>(),
+];
+const testXor = [
+	expected<false>().toEqualTypeOf<Xor<true, true>>(),
+	expected<true>().toEqualTypeOf<Xor<true, false>>(),
+	expected<true>().toEqualTypeOf<Xor<false, true>>(),
+	expected<false>().toEqualTypeOf<Xor<false, false>>(),
 ];
 const testNot = [
 	expected<false>().toEqualTypeOf<Not<true>>(),
