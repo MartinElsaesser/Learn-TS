@@ -35,16 +35,42 @@ type doubledString = Apply<DoubleString, "hi!">;
 type mappedDoubleString = MapTuple<["a", "b"], DoubleString>;
 //    ^?
 
+type MakeMappable<Arr extends unknown[], _Idx extends number[] = [], _Arr = Arr> =
+	Arr extends [infer First, ...infer Rest] ?
+		[
+			{
+				elem: First;
+				idx0: _Idx["length"];
+				idx1: [..._Idx, 0]["length"];
+				arr: _Arr;
+			},
+			...MakeMappable<Rest, [0, ..._Idx], _Arr>,
+		]
+	:	[];
+type arr = MakeMappable<["a", "b", 0, 1]>;
+//   ^?
 /*
 	FILTER
 */
 interface FilterString extends HKT {
-	func: (x: Cast<this["_1"], string | number>) => typeof x extends string ? false : true;
+	func: (
+		x: Cast<
+			this["_1"],
+			{
+				elem: unknown;
+				idx0: number;
+				idx1: number;
+				arr: unknown[];
+			}
+		>
+	) => (typeof x)["idx1"] extends arr["length"] ? true : false;
 }
 type FilterTuple<Arr extends HKTInput<F>[], F extends HKT> =
 	Arr extends [infer First, ...infer Rest extends HKTInput<F>[]] ?
 		[...(Apply<F, First> extends true ? [First] : []), ...FilterTuple<Rest, F>]
 	:	[];
 
-type filteredTuple = FilterTuple<["a", "b", 0, 1], FilterString>;
+type filteredTuple = FilterTuple<MakeMappable<["a", "b", 0, 1]>, FilterString>;
 //    ^?
+type mappedTuple = MapTuple<MakeMappable<["a", "b", 0, 1]>, FilterString>;
+//   ^?
