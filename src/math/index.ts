@@ -46,6 +46,8 @@ expectTypeOf<101.69>().toEqualTypeOf<ToNumber<101.69>>();
 expectTypeOf<101.7>().toEqualTypeOf<ToNumber<"101.70">>();
 // @ts-expect-error
 expectTypeOf<1>().toEqualTypeOf<ToNumber<"01">>();
+// @ts-expect-error
+expectTypeOf<17>().toEqualTypeOf<ToNumber<"17.0">>();
 
 // 1.5 + 1.15 => 1.65
 // 15(1) + 115(2)
@@ -59,3 +61,17 @@ expectTypeOf<1>().toEqualTypeOf<ToNumber<"01">>();
 
 // 0.6 / 3 => 0.2
 // 6(1) / 3 => 2(1)
+
+type RevOrder<S extends string, _FirstReplaced extends boolean = true> =
+	S extends `${infer F}${infer R}` ? `[${Replace<F, "0", _FirstReplaced>}${RevOrder<R, false>}]`
+	:	S;
+type Replace<S extends string, Replacer extends string, Cond extends boolean> =
+	Cond extends true ? Replacer : S;
+type ForwOrder<S extends string, _Acc extends string = "", _FirstReplaced extends boolean = true> =
+	S extends `${infer F}${infer R}` ?
+		ForwOrder<R, `[${_Acc}${Replace<F, "0", _FirstReplaced>}]`, false>
+	:	_Acc;
+type r = RevOrder<"abc">;
+//   ^?
+type f = ForwOrder<"abc">;
+//   ^?
