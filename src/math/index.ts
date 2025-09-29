@@ -1,5 +1,6 @@
 import { expectTypeOf } from "expect-type";
 import * as $String from "../lib/string";
+import * as $Tuple from "../lib/tuple";
 
 type system1$1_01 = {
 	sign: "+";
@@ -9,7 +10,7 @@ type system1$1_01 = {
 	decimals_places: [0, 0];
 };
 
-type Num = Repeat<3, false>;
+type Num = $Tuple.Repeat<3, false>;
 //   ^?
 // 1.01 + 1.19 => 2.20
 // 101(2) + 119(2) => 220

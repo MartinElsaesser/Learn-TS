@@ -1,6 +1,6 @@
 import { expectTypeOf as expected } from "expect-type";
 import * as $String from "./lib/string";
-import * as $Array from "./lib/array";
+import * as $Tuple from "./lib/tuple";
 import * as $Object from "./lib/object";
 
 type Prop = string | number;
@@ -26,8 +26,8 @@ type LazyPropertyPath<
 	Obj,
 	Path extends string,
 	_Properties extends string[] = $String.Split<Path, ".">,
-	_LastProperty extends string = $Array.OnlyLastElement<_Properties>,
-	_AllButLastProperties extends string[] = $Array.ExcludeLastElement<_Properties>,
+	_LastProperty extends string = $Tuple.OnlyLastElement<_Properties>,
+	_AllButLastProperties extends string[] = $Tuple.ExcludeLastElement<_Properties>,
 	_SubObj = $Object.PropertyPathLookupOnlyObjects<Obj, _AllButLastProperties>,
 	_PathEndsOnDot extends boolean = $String.EndsOn<Path, ".">,
 > =
@@ -47,8 +47,8 @@ type DebugLazyPropertyPath<
 	Obj,
 	Path extends string,
 	_Properties extends string[] = $String.Split<Path, ".">,
-	_LastProperty extends string = $Array.OnlyLastElement<_Properties>,
-	_AllButLastProperties extends string[] = $Array.ExcludeLastElement<_Properties>,
+	_LastProperty extends string = $Tuple.OnlyLastElement<_Properties>,
+	_AllButLastProperties extends string[] = $Tuple.ExcludeLastElement<_Properties>,
 	_SubObj = $Object.PropertyPathLookupOnlyObjects<Obj, _AllButLastProperties>,
 	_PathEndsOnDot extends boolean = $String.EndsOn<Path, ".">,
 > = {
@@ -160,11 +160,11 @@ const testNestedResolution = [
 	>(),
 ];
 
-expected<[]>().toEqualTypeOf<$Array.ExcludeLastElement<$String.Split<"a", ".">>>();
-expected<["a"]>().toEqualTypeOf<$Array.ExcludeLastElement<$String.Split<"a.", ".">>>();
-expected<["a"]>().toEqualTypeOf<$Array.ExcludeLastElement<$String.Split<"a.b", ".">>>();
-expected<["a", "b"]>().toEqualTypeOf<$Array.ExcludeLastElement<$String.Split<"a.b.", ".">>>();
-expected<["a", "b"]>().toEqualTypeOf<$Array.ExcludeLastElement<$String.Split<"a.b.c", ".">>>();
+expected<[]>().toEqualTypeOf<$Tuple.ExcludeLastElement<$String.Split<"a", ".">>>();
+expected<["a"]>().toEqualTypeOf<$Tuple.ExcludeLastElement<$String.Split<"a.", ".">>>();
+expected<["a"]>().toEqualTypeOf<$Tuple.ExcludeLastElement<$String.Split<"a.b", ".">>>();
+expected<["a", "b"]>().toEqualTypeOf<$Tuple.ExcludeLastElement<$String.Split<"a.b.", ".">>>();
+expected<["a", "b"]>().toEqualTypeOf<$Tuple.ExcludeLastElement<$String.Split<"a.b.c", ".">>>();
 
 // test $Object.PropertyPathLookup
 expected<Person["roles"]>().toEqualTypeOf<
