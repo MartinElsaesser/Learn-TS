@@ -9,10 +9,7 @@ type system1$1_01 = {
 	decimals_places: [0, 0];
 };
 
-type Repeat<TNum extends number, _Acc extends number[] = []> =
-	_Acc["length"] extends TNum ? _Acc : Repeat<TNum, [0, ..._Acc]>;
-
-type Num = Repeat<3>;
+type Num = Repeat<3, false>;
 //   ^?
 // 1.01 + 1.19 => 2.20
 // 101(2) + 119(2) => 220
@@ -24,7 +21,7 @@ type ParseIntPart<
 
 type ParseDecimalPart<
 	Decimal extends string | undefined,
-	_Decimal = $String.TrimEndingMatchingChars<Cast<Decimal, string>, "0">,
+	_Decimal = $String.TrimTrailingMatchingChars<Cast<Decimal, string>, "0">,
 > =
 	Decimal extends undefined ? never
 	: _Decimal extends "" ? never
@@ -49,29 +46,41 @@ type ParseStringToNum<
 
 type ToNumber<Num extends string | number> = Num extends string ? ParseStringToNum<Num> : Num;
 
-expectTypeOf<0>().toEqualTypeOf<ToNumber<"">>();
-expectTypeOf<100>().toEqualTypeOf<ToNumber<"100">>();
-expectTypeOf<0.1>().toEqualTypeOf<ToNumber<"0.1">>();
-expectTypeOf<0.1>().toEqualTypeOf<ToNumber<".1">>();
-expectTypeOf<0>().toEqualTypeOf<ToNumber<"0">>();
-expectTypeOf<101.69>().toEqualTypeOf<ToNumber<"101.69">>();
-expectTypeOf<101.69>().toEqualTypeOf<ToNumber<101.69>>();
+const emptyStringTest = [expectTypeOf<0>().toEqualTypeOf<ToNumber<"">>()];
 
-expectTypeOf<0>().toEqualTypeOf<ToNumber<"000">>();
-expectTypeOf<0>().toEqualTypeOf<ToNumber<"00">>();
-expectTypeOf<0>().toEqualTypeOf<ToNumber<"0">>();
+const test_validCases = [
+	expectTypeOf<100>().toEqualTypeOf<ToNumber<"100">>(),
+	expectTypeOf<0.1>().toEqualTypeOf<ToNumber<"0.1">>(),
+	expectTypeOf<0.1>().toEqualTypeOf<ToNumber<".1">>(),
+	expectTypeOf<0>().toEqualTypeOf<ToNumber<"0">>(),
+	expectTypeOf<101.69>().toEqualTypeOf<ToNumber<"101.69">>(),
+	expectTypeOf<101.69>().toEqualTypeOf<ToNumber<101.69>>(),
+];
 
-expectTypeOf<10>().toEqualTypeOf<ToNumber<"0010">>();
-expectTypeOf<0.01>().toEqualTypeOf<ToNumber<"00.01">>();
-expectTypeOf<0.01>().toEqualTypeOf<ToNumber<"00.010">>();
+const test_leadingZeroesInIntegerPart = [
+	expectTypeOf<0>().toEqualTypeOf<ToNumber<"000">>(),
+	expectTypeOf<10>().toEqualTypeOf<ToNumber<"0010">>(),
+	expectTypeOf<0.01>().toEqualTypeOf<ToNumber<"00.01">>(),
+];
+const test_trailingZeroesInDecimalPart = [
+	expectTypeOf<101.7>().toEqualTypeOf<ToNumber<"101.70">>(),
+	expectTypeOf<17>().toEqualTypeOf<ToNumber<"17.0">>(),
+];
 
-expectTypeOf<101.7>().toEqualTypeOf<ToNumber<"101.70">>();
-expectTypeOf<17>().toEqualTypeOf<ToNumber<"17.0">>();
+const test_leadingAndTrailingZeroes = [
+	expectTypeOf<17>().toEqualTypeOf<ToNumber<"017.0">>(),
+	expectTypeOf<17.5>().toEqualTypeOf<ToNumber<"017.50">>(),
+];
 
-expectTypeOf<never>().toEqualTypeOf<ToNumber<"0.0.">>();
-expectTypeOf<never>().toEqualTypeOf<ToNumber<"1.1.1">>();
-expectTypeOf<never>().toEqualTypeOf<ToNumber<"1.0.0.0">>();
-expectTypeOf<never>().toEqualTypeOf<ToNumber<"1.2.3.4.5.6">>();
+const test_invalidNumbers = [
+	expectTypeOf<never>().toEqualTypeOf<ToNumber<"0.0.">>(),
+	expectTypeOf<never>().toEqualTypeOf<ToNumber<"1.1.1">>(),
+	expectTypeOf<never>().toEqualTypeOf<ToNumber<"1.0.0.0">>(),
+	expectTypeOf<never>().toEqualTypeOf<ToNumber<"1.2.3.4.5.6">>(),
+	expectTypeOf<never>().toEqualTypeOf<ToNumber<"a">>(),
+	expectTypeOf<never>().toEqualTypeOf<ToNumber<"a.0">>(),
+	expectTypeOf<never>().toEqualTypeOf<ToNumber<"a.a">>(),
+];
 
 // 1.5 + 1.15 => 1.65
 // 15(1) + 115(2)

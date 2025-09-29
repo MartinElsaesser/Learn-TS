@@ -47,3 +47,13 @@ const testSuite3 = [
 	expected<"a">().toEqualTypeOf<JoinStrings<["a"], ".">>(),
 	expected<"">().toEqualTypeOf<JoinStrings<[""], ".">>(),
 ];
+
+export type Repeat<RepeatCount extends number, Item, _Acc extends unknown[] = []> =
+	_Acc["length"] extends RepeatCount ? _Acc : Repeat<RepeatCount, Item, [Item, ..._Acc]>;
+
+const testSuite4 = [
+	expected<[]>().toEqualTypeOf<Repeat<0, "a">>(),
+	expected<["a"]>().toEqualTypeOf<Repeat<1, "a">>(),
+	expected<["a", "a"]>().toEqualTypeOf<Repeat<2, "a">>(),
+	expected<[1, 1, 1, 1]>().toEqualTypeOf<Repeat<4, 1>>(),
+];
