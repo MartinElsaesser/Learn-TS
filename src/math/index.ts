@@ -2,19 +2,6 @@ import { expectTypeOf } from "expect-type";
 import * as $String from "../lib/string";
 import * as $Tuple from "../lib/tuple";
 
-type system1$1_01 = {
-	sign: "+";
-	int: [
-		/* 101 zeros */
-	];
-	decimals_places: [0, 0];
-};
-
-type Num = $Tuple.Repeat<3, false>;
-//   ^?
-// 1.01 + 1.19 => 2.20
-// 101(2) + 119(2) => 220
-
 type ParseIntPart<
 	Int extends string,
 	_Int extends string = $String.TrimLeadingMatchingChars<Int, "0">,
@@ -28,9 +15,12 @@ type ParseDecimalPart<
 	: _Decimal extends "" ? never
 	: _Decimal;
 
+type RemovePlus<Num extends string> = Num extends `+${infer WithoutPlus}` ? WithoutPlus : Num;
+
 type ParseStringToNum<
-	Num extends string,
-	_NumberParts extends string[] = $String.Split<Num, ".">,
+	NumberWithSign extends string,
+	_NumberWithoutPlus extends string = RemovePlus<NumberWithSign>,
+	_NumberParts extends string[] = $String.Split<_NumberWithoutPlus, ".">,
 	_IntPart extends string = ParseIntPart<_NumberParts[0]>,
 	_SecondPart extends string | never = ParseDecimalPart<_NumberParts[1]>,
 	_Num extends string = [_SecondPart] extends [never] ? _IntPart : `${_IntPart}.${_SecondPart}`,
@@ -41,7 +31,9 @@ type ParseStringToNum<
 > =
 	_IsValidDecimal extends true ?
 		_Num extends `${infer Parsed extends number}` ?
-			Parsed
+			number extends Parsed ?
+				never
+			:	Parsed
 		:	never
 	:	never;
 
@@ -52,6 +44,7 @@ const emptyStringTest = [
 	expectTypeOf<0>().toEqualTypeOf<ToNumber<"">>(),
 ];
 
+// TODO: add +/-
 const test_validCases = [
 	expectTypeOf<100>().toEqualTypeOf<ToNumber<"100">>(),
 	expectTypeOf<0.1>().toEqualTypeOf<ToNumber<"0.1">>(),
@@ -76,7 +69,15 @@ const test_leadingAndTrailingZeroes = [
 	expectTypeOf<17.5>().toEqualTypeOf<ToNumber<"017.50">>(),
 ];
 
+const testSign = [
+	expectTypeOf<101.69>().toEqualTypeOf<ToNumber<"+101.69">>(),
+	expectTypeOf<-101.69>().toEqualTypeOf<ToNumber<"-101.69">>(),
+	expectTypeOf<101.69>().toEqualTypeOf<ToNumber<101.69>>(),
+];
+
 const test_invalidNumbers = [
+	expectTypeOf<never>().toEqualTypeOf<ToNumber<"--1">>(),
+	expectTypeOf<never>().toEqualTypeOf<ToNumber<"++1">>(),
 	expectTypeOf<never>().toEqualTypeOf<ToNumber<"0.0.">>(),
 	expectTypeOf<never>().toEqualTypeOf<ToNumber<"1.1.1">>(),
 	expectTypeOf<never>().toEqualTypeOf<ToNumber<"1.0.0.0">>(),
@@ -86,12 +87,27 @@ const test_invalidNumbers = [
 	expectTypeOf<never>().toEqualTypeOf<ToNumber<"a.a">>(),
 ];
 
+type Float = {
+	sign: "+";
+	integer: number[];
+	decimals: number[];
+};
+
+type FloatToNumber<F extends Float> = any;
+
+type Num = $Tuple.Repeat<3, false>;
+//   ^?
+// 1.01 + 1.19 => 2.20
+// 101(2) + 119(2) => 220
+
 // 1.5 + 1.15 => 1.65
 // 15(1) + 115(2)
 // 150(2) + 115(2) => 165(2)
 
 // 1 * 0.5 => 0.5
 // 10(1) * 5(1)  => 50(2)
+// 2 * 0.5 => 1
+// 2(0) * 5(1) = 10(1)
 
 // 1.19 - 1.01 => 0.18
 // 119(2) - 101(2) => 18(2)
