@@ -1,23 +1,5 @@
 import { expectTypeOf } from "expect-type";
-
-// binary
-// 1000
-// 100
-type ReverseString<S extends string> =
-	S extends `${infer F}${infer R}` ? `${ReverseString<R>}${F}` : S;
-
-expectTypeOf<"">().toEqualTypeOf<ReverseString<"">>();
-expectTypeOf<"a">().toEqualTypeOf<ReverseString<"a">>();
-expectTypeOf<"ba">().toEqualTypeOf<ReverseString<"ab">>();
-expectTypeOf<"fedcba">().toEqualTypeOf<ReverseString<"abcdef">>();
-
-type BinToUnaryHelper<RevBinary extends string, _Zeros extends number[] = [0]> =
-	RevBinary extends `${infer F}${infer R}` ?
-		F extends "1" ?
-			[..._Zeros, ...BinToUnaryHelper<R, [..._Zeros, ..._Zeros]>]
-		:	BinToUnaryHelper<R, [..._Zeros, ..._Zeros]>
-	: RevBinary extends "1" ? [..._Zeros]
-	: [];
+import * as $String from "../lib/string";
 
 type system1$1_01 = {
 	sign: "+";
@@ -30,24 +12,66 @@ type system1$1_01 = {
 type Repeat<TNum extends number, _Acc extends number[] = []> =
 	_Acc["length"] extends TNum ? _Acc : Repeat<TNum, [0, ..._Acc]>;
 
-type Num = Repeat<"3">;
+type Num = Repeat<3>;
 //   ^?
 // 1.01 + 1.19 => 2.20
 // 101(2) + 119(2) => 220
 
-type ParseStringToNum<Num extends string> =
-	Num extends `${infer Parsed extends number}` ? Parsed : never;
+type ParseIntPart<
+	Int extends string,
+	_Int extends string = $String.TrimLeadingMatchingChars<Int, "0">,
+> = _Int extends "" ? "0" : _Int;
+
+type ParseDecimalPart<
+	Decimal extends string | undefined,
+	_Decimal = $String.TrimEndingMatchingChars<Cast<Decimal, string>, "0">,
+> =
+	Decimal extends undefined ? never
+	: _Decimal extends "" ? never
+	: _Decimal;
+
+type ParseStringToNum<
+	Num extends string,
+	_NumberParts extends string[] = $String.Split<Num, ".">,
+	_IntPart extends string = ParseIntPart<_NumberParts[0]>,
+	_SecondPart extends string | never = ParseDecimalPart<_NumberParts[1]>,
+	_Num extends string = [_SecondPart] extends [never] ? _IntPart : `${_IntPart}.${_SecondPart}`,
+	_IsValidDecimal extends boolean = _NumberParts["length"] extends 0 ? true
+	: _NumberParts["length"] extends 1 ? true
+	: _NumberParts["length"] extends 2 ? true
+	: false,
+> =
+	_IsValidDecimal extends true ?
+		_Num extends `${infer Parsed extends number}` ?
+			Parsed
+		:	never
+	:	never;
 
 type ToNumber<Num extends string | number> = Num extends string ? ParseStringToNum<Num> : Num;
 
+expectTypeOf<0>().toEqualTypeOf<ToNumber<"">>();
+expectTypeOf<100>().toEqualTypeOf<ToNumber<"100">>();
+expectTypeOf<0.1>().toEqualTypeOf<ToNumber<"0.1">>();
+expectTypeOf<0.1>().toEqualTypeOf<ToNumber<".1">>();
+expectTypeOf<0>().toEqualTypeOf<ToNumber<"0">>();
 expectTypeOf<101.69>().toEqualTypeOf<ToNumber<"101.69">>();
 expectTypeOf<101.69>().toEqualTypeOf<ToNumber<101.69>>();
-// @ts-expect-error
+
+expectTypeOf<0>().toEqualTypeOf<ToNumber<"000">>();
+expectTypeOf<0>().toEqualTypeOf<ToNumber<"00">>();
+expectTypeOf<0>().toEqualTypeOf<ToNumber<"0">>();
+
+expectTypeOf<10>().toEqualTypeOf<ToNumber<"0010">>();
+expectTypeOf<0.01>().toEqualTypeOf<ToNumber<"00.01">>();
+expectTypeOf<0.01>().toEqualTypeOf<ToNumber<"00.010">>();
+
 expectTypeOf<101.7>().toEqualTypeOf<ToNumber<"101.70">>();
-// @ts-expect-error
-expectTypeOf<1>().toEqualTypeOf<ToNumber<"01">>();
-// @ts-expect-error
 expectTypeOf<17>().toEqualTypeOf<ToNumber<"17.0">>();
+
+expectTypeOf<never>().toEqualTypeOf<ToNumber<"0.0.">>();
+expectTypeOf<never>().toEqualTypeOf<ToNumber<"1.1.1">>();
+expectTypeOf<never>().toEqualTypeOf<ToNumber<"1.0.0.0">>();
+expectTypeOf<never>().toEqualTypeOf<ToNumber<"1.2.3.4.5.6">>();
 
 // 1.5 + 1.15 => 1.65
 // 15(1) + 115(2)
@@ -61,17 +85,3 @@ expectTypeOf<17>().toEqualTypeOf<ToNumber<"17.0">>();
 
 // 0.6 / 3 => 0.2
 // 6(1) / 3 => 2(1)
-
-type RevOrder<S extends string, _FirstReplaced extends boolean = true> =
-	S extends `${infer F}${infer R}` ? `[${Replace<F, "0", _FirstReplaced>}${RevOrder<R, false>}]`
-	:	S;
-type Replace<S extends string, Replacer extends string, Cond extends boolean> =
-	Cond extends true ? Replacer : S;
-type ForwOrder<S extends string, _Acc extends string = "", _FirstReplaced extends boolean = true> =
-	S extends `${infer F}${infer R}` ?
-		ForwOrder<R, `[${_Acc}${Replace<F, "0", _FirstReplaced>}]`, false>
-	:	_Acc;
-type r = RevOrder<"abc">;
-//   ^?
-type f = ForwOrder<"abc">;
-//   ^?
