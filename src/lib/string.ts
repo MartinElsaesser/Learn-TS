@@ -102,9 +102,21 @@ const testSuite7 = [
 	expected<"-bac">().toEqualTypeOf<TrimLeadingMatchingChars<"aa-bac", "a">>(),
 ];
 
-export type Reverse<S extends string> = S extends `${infer F}${infer R}` ? `${Reverse<R>}${F}` : S;
+export type TrimEndingMatchingChars<S extends string, CharacterToTrim extends string> = Reverse<
+	TrimLeadingMatchingChars<Reverse<S>, CharacterToTrim>
+>;
 
 const testSuite8 = [
+	expected<"">().toEqualTypeOf<TrimEndingMatchingChars<"aaaaaa", "a">>(),
+	expected<"b">().toEqualTypeOf<TrimEndingMatchingChars<"baa", "a">>(),
+	expected<"ab">().toEqualTypeOf<TrimEndingMatchingChars<"aba", "a">>(),
+	expected<"caab">().toEqualTypeOf<TrimEndingMatchingChars<"caaba", "a">>(),
+	expected<"abccdef">().toEqualTypeOf<TrimEndingMatchingChars<"abccdefcc", "c">>(),
+];
+
+export type Reverse<S extends string> = S extends `${infer F}${infer R}` ? `${Reverse<R>}${F}` : S;
+
+const testSuite9 = [
 	expected<"">().toEqualTypeOf<Reverse<"">>(),
 	expected<"a">().toEqualTypeOf<Reverse<"a">>(),
 	expected<"ba">().toEqualTypeOf<Reverse<"ab">>(),
