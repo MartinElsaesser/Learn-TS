@@ -122,3 +122,24 @@ const testSuite9 = [
 	expected<"ba">().toEqualTypeOf<Reverse<"ab">>(),
 	expected<"fedcba">().toEqualTypeOf<Reverse<"abcdef">>(),
 ];
+
+export type AddCharAtPosition<
+	S extends string,
+	Char extends string,
+	Position extends number[],
+	_Index extends number[] = [],
+	_Before extends string = "",
+> =
+	S extends `${infer F}${infer R}` ?
+		Position extends _Index ?
+			`${_Before}${Char}${S}` // loop exhausted
+		:	AddCharAtPosition<R, Char, Position, [0, ..._Index], `${_Before}${F}`> // loop again
+	:	`${_Before}${Char}${S}`; // S is empty
+
+const testSuite10 = [
+	expected<".">().toEqualTypeOf<AddCharAtPosition<"", ".", []>>(),
+	expected<"ab.cd">().toEqualTypeOf<AddCharAtPosition<"abcd", ".", [0, 0]>>(),
+	expected<"abc.de">().toEqualTypeOf<AddCharAtPosition<"abcde", ".", [0, 0, 0]>>(),
+	expected<"abcde.">().toEqualTypeOf<AddCharAtPosition<"abcde", ".", [0, 0, 0, 0, 0]>>(),
+	expected<"abcde.">().toEqualTypeOf<AddCharAtPosition<"abcde", ".", [0, 0, 0, 0, 0, 0]>>(),
+];
