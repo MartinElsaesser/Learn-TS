@@ -143,3 +143,28 @@ const testSuite10 = [
 	expected<"abcde.">().toEqualTypeOf<AddCharAtPosition<"abcde", ".", [0, 0, 0, 0, 0]>>(),
 	expected<"abcde.">().toEqualTypeOf<AddCharAtPosition<"abcde", ".", [0, 0, 0, 0, 0, 0]>>(),
 ];
+
+export type PadStart<
+	S extends string,
+	PadChar extends string,
+	Length extends number[],
+	_Index extends number[] = [],
+	_Before extends string = "",
+> =
+	Length extends _Index ?
+		`${_Before}${S}` // loop exhausted
+	: S extends `${infer F}${infer R}` ?
+		PadStart<R, PadChar, Length, [0, ..._Index], `${_Before}${F}`> // still letters left in S
+	:	PadStart<S, PadChar, Length, [0, ..._Index], `${_Before}${PadChar}`>; // no more letters left in S
+
+type debug = PadStart<"abcde", "0", [0, 0, 0, 0, 0, 0, 0]>;
+//   ^?
+
+const testSuite11 = [
+	expected<"abcde00">().toEqualTypeOf<PadStart<"abcde", "0", [0, 0, 0, 0, 0, 0, 0]>>(),
+	expected<"000">().toEqualTypeOf<PadStart<"", "0", [0, 0, 0]>>(),
+	expected<"000">().toEqualTypeOf<PadStart<"", "0", [0, 0, 0]>>(),
+	expected<"abc">().toEqualTypeOf<PadStart<"abc", "0", [0, 0, 0]>>(),
+	expected<"abcd">().toEqualTypeOf<PadStart<"abcd", "0", [0, 0, 0]>>(),
+	expected<"0">().toEqualTypeOf<PadStart<"", "0", [0]>>(),
+];
