@@ -47,7 +47,10 @@ type ParseStringToNum<
 
 type ToNumber<Num extends string | number> = Num extends string ? ParseStringToNum<Num> : Num;
 
-const emptyStringTest = [expectTypeOf<0>().toEqualTypeOf<ToNumber<"">>()];
+const emptyStringTest = [
+	// <br>
+	expectTypeOf<0>().toEqualTypeOf<ToNumber<"">>(),
+];
 
 const test_validCases = [
 	expectTypeOf<100>().toEqualTypeOf<ToNumber<"100">>(),
