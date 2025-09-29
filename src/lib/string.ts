@@ -86,3 +86,18 @@ const testSuite6 = [
 	expected<false>().toEqualTypeOf<EndsOn<"abcdefghijklmnopqrstuvwxyz", "">>(),
 	expected<false>().toEqualTypeOf<EndsOn<"abcdefghijklmnopqrstuvwxyz", "b">>(),
 ];
+
+export type TrimLeadingMatchingChars<S extends string, CharacterToTrim extends string> =
+	S extends `${infer F}${infer R}` ?
+		F extends CharacterToTrim ?
+			TrimLeadingMatchingChars<R, CharacterToTrim>
+		:	S
+	:	S;
+
+const testSuite7 = [
+	expected<"">().toEqualTypeOf<TrimLeadingMatchingChars<"aaaaaa", "a">>(),
+	expected<"b">().toEqualTypeOf<TrimLeadingMatchingChars<"aab", "a">>(),
+	expected<"ba">().toEqualTypeOf<TrimLeadingMatchingChars<"aba", "a">>(),
+	expected<"bac">().toEqualTypeOf<TrimLeadingMatchingChars<"aabac", "a">>(),
+	expected<"-bac">().toEqualTypeOf<TrimLeadingMatchingChars<"aa-bac", "a">>(),
+];
