@@ -1,4 +1,4 @@
-type Integer<TNum extends number, TTup extends number[] = []> =
+export type Integer<TNum extends number, TTup extends number[] = []> =
 	TTup["length"] extends TNum ? TTup : Integer<TNum, [0, ...TTup]>;
 
 // add
