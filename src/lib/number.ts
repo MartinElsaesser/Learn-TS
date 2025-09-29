@@ -1,6 +1,7 @@
 import { expectTypeOf } from "expect-type";
 import * as $String from "./string";
 import * as $Tuple from "./tuple";
+import * as $Integer from "./integers";
 
 type ParseIntPart<
 	Int extends string,
@@ -15,18 +16,23 @@ type ParseDecimalPart<
 	: _Decimal extends "" ? never
 	: _Decimal;
 
-type RemovePlus<Num extends string> = Num extends `+${infer WithoutPlus}` ? WithoutPlus : Num;
+type RemoveSign<Num extends string> =
+	Num extends `+${infer WithoutPlus}` ? { prefix: ""; number: WithoutPlus }
+	: Num extends `-${infer WithoutMinus}` ? { prefix: "-"; number: WithoutMinus }
+	: { prefix: ""; number: Num };
 
 type ParseStringToNum<
 	NumberWithSign extends string,
-	_NumberWithoutPlus extends string = RemovePlus<NumberWithSign>,
-	_NumberParts extends string[] = $String.Split<_NumberWithoutPlus, ".">,
-	_IntPart extends string = ParseIntPart<_NumberParts[0]>,
-	_SecondPart extends string | never = ParseDecimalPart<_NumberParts[1]>,
-	_Num extends string = [_SecondPart] extends [never] ? _IntPart : `${_IntPart}.${_SecondPart}`,
-	_IsValidDecimal extends boolean = _NumberParts["length"] extends 0 ? true
-	: _NumberParts["length"] extends 1 ? true
-	: _NumberParts["length"] extends 2 ? true
+	_NumberAndPrefix extends { prefix: string; number: string } = RemoveSign<NumberWithSign>,
+	_DecomposedNumber extends string[] = $String.Split<_NumberAndPrefix["number"], ".">,
+	_IntPart extends string = ParseIntPart<_DecomposedNumber[0]>,
+	_DecimalPart extends string | never = ParseDecimalPart<_DecomposedNumber[1]>,
+	_Num extends string = [_DecimalPart] extends [never] ?
+		`${_NumberAndPrefix["prefix"]}${_IntPart}`
+	:	`${_NumberAndPrefix["prefix"]}${_IntPart}.${_DecimalPart}`,
+	_IsValidDecimal extends boolean = _DecomposedNumber["length"] extends 0 ? true
+	: _DecomposedNumber["length"] extends 1 ? true
+	: _DecomposedNumber["length"] extends 2 ? true
 	: false,
 > =
 	_IsValidDecimal extends true ?
@@ -73,6 +79,8 @@ const testSign = [
 	expectTypeOf<101.69>().toEqualTypeOf<ToNumber<"+101.69">>(),
 	expectTypeOf<-101.69>().toEqualTypeOf<ToNumber<"-101.69">>(),
 	expectTypeOf<101.69>().toEqualTypeOf<ToNumber<101.69>>(),
+	expectTypeOf<0.0017>().toEqualTypeOf<ToNumber<"+.00170">>(),
+	expectTypeOf<-0.0017>().toEqualTypeOf<ToNumber<"-.00170">>(),
 ];
 
 const test_invalidNumbers = [
@@ -88,14 +96,30 @@ const test_invalidNumbers = [
 ];
 
 type Float = {
-	sign: "+";
+	sign: "+" | "-";
 	integer: number[];
-	decimals: number[];
+	shiftPlaces: number[];
 };
 
-type FloatToNumber<F extends Float> = Num;
+type F1 = {
+	sign: "-";
+	integer: $Integer.Integer<170>;
+	shiftPlaces: $Integer.Integer<5>;
+};
 
-type Num = $Tuple.Repeat<3, false>;
+type FloatToNumber<
+	F extends Float,
+	_ReversedInteger extends string = $String.Reverse<`${F["integer"]["length"]}`>,
+	_PadInteger extends string = $String.PadEnd<_ReversedInteger, "0", F["shiftPlaces"]>,
+	_AddedDecimalPoint extends string = $String.AddCharAtPosition<
+		_PadInteger,
+		".",
+		F["shiftPlaces"]
+	>,
+	_Return extends string = `${F["sign"]}${$String.Reverse<_AddedDecimalPoint>}`,
+> = ToNumber<_Return>;
+
+type Num = FloatToNumber<F1>;
 //   ^?
 // 1.01 + 1.19 => 2.20
 // 101(2) + 119(2) => 220
