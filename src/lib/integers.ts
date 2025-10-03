@@ -19,7 +19,7 @@ type Add<A extends GenericInteger, B extends GenericInteger> =
 		B["sign"] extends "+" ?
 			// +A + +B
 			{
-				number: PositiveAdd<A, B>;
+				number: [...A["number"], ...B["number"]];
 				sign: "+";
 			}
 		:	// +A + -B
@@ -29,21 +29,46 @@ type Add<A extends GenericInteger, B extends GenericInteger> =
 			"-A + +B"
 		:	// -A + -B
 			{
-				number: PositiveAdd<A, B>;
+				number: [...A["number"], ...B["number"]];
 				sign: "-";
 			}
 	:	never;
 
-type PositiveAdd<A extends GenericInteger, B extends GenericInteger> = [
-	...A["number"],
-	...B["number"],
-];
-
-// A smaller than B
-// loop:
-//  A is [] && B is not []
-//  reduce A
-//  reduce B
+// subtract (A - B)
+// cases:
+// 1. A > B   4-2=2
+//  A			B			Result
+//  [0,0,0,0] 	[0,0]		[]
+//  [0,0,0,0] 	[0,0]		[0]
+//  [0,0,0,0] 	[0,0]		[0,0]
+// 2. A == B  4-4=0
+//  [0,0,0,0] 	[0,0,0,0]	[]
+// 3. A < B   2-4=-2
+//  [0,0] 		[0,0,0,0]	[]
+//  [0,0] 		[0,0,0,0]	[0]
+//  [0,0] 		[0,0,0,0]	[0,0]
+type Add_Pos_Neg<A extends number[], B extends number[], _Acc extends number[] = []> =
+	SmallerT<A, B> extends true ?
+		// A < B
+		[..._Acc, ...A] extends B ?
+			{
+				number: _Acc;
+				sign: "-";
+			}
+		:	Add_Pos_Neg<A, B, [0, ..._Acc]>
+	: // A >= B
+	[..._Acc, ...B] extends A ?
+		{
+			number: _Acc;
+			sign: "+";
+		}
+	:	Add_Pos_Neg<A, B, [0, ..._Acc]>;
+type test1 = Add_Pos_Neg<[0, 0], [0]>;
+//   ^?
+type test2 = Add_Pos_Neg<[0, 0], [0, 0]>;
+//   ^?
+type test3 = Add_Pos_Neg<[0], [0, 0]>;
+//   ^?
 
 type SmallerT<A extends number[], B extends number[]> =
 	A extends [infer A_First, ...infer A_Rest extends number[]] ?
@@ -68,7 +93,6 @@ type test = SmallerOrEqualT<[0], [0, 0]>;
 
 type AddI<A extends number, B extends number> = Add<Integer<A>, Integer<B>>["length"];
 
-// subtract
 type SubT<A extends number[], B extends number[], TRes extends number[] = []> =
 	[...TRes, ...B] extends A ? TRes : SubT<A, B, [0, ...TRes]>;
 
@@ -134,7 +158,8 @@ type Tup_4 = {
 	sign: "-";
 };
 
-type testAdd = Add<Tup_2, Tup_4>; // 7 + 3
+type testAdd = Add_Pos_Neg<Tup_2, Tup_4>; // 7 + 3
+//   ^?
 // 3 - 5
 
 // three representations:
