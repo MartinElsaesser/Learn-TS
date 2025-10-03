@@ -26,25 +26,25 @@ export type Add<A extends AnyInteger, B extends AnyInteger> =
 // Add Cases:
 const test_Add = [
 	// +A + +B
-	expectTypeOf<Integer<5, "+">>().toEqualTypeOf<Add<Integer<2, "+">, Integer<3, "+">>>(),
+	expectTypeOf<Integer<"+", 5>>().toEqualTypeOf<Add<Integer<"+", 2>, Integer<"+", 3>>>(),
 	// +A + -B
 	[
 		// A < B
-		expectTypeOf<Integer<2, "-">>().toEqualTypeOf<Add<Integer<3, "+">, Integer<5, "-">>>(),
+		expectTypeOf<Integer<"-", 2>>().toEqualTypeOf<Add<Integer<"+", 3>, Integer<"-", 5>>>(),
 		// A == B
-		expectTypeOf<Integer<0, "+">>().toEqualTypeOf<Add<Integer<3, "+">, Integer<3, "-">>>(),
+		expectTypeOf<Integer<"+", 0>>().toEqualTypeOf<Add<Integer<"+", 3>, Integer<"-", 3>>>(),
 		// A > B
-		expectTypeOf<Integer<2, "+">>().toEqualTypeOf<Add<Integer<5, "+">, Integer<3, "-">>>(),
+		expectTypeOf<Integer<"+", 2>>().toEqualTypeOf<Add<Integer<"+", 5>, Integer<"-", 3>>>(),
 	],
 	// -A + +B
 	[
 		// B < A
-		expectTypeOf<Integer<2, "-">>().toEqualTypeOf<Add<Integer<5, "-">, Integer<3, "+">>>(),
+		expectTypeOf<Integer<"-", 2>>().toEqualTypeOf<Add<Integer<"-", 5>, Integer<"+", 3>>>(),
 		// B == A
-		expectTypeOf<Integer<0, "+">>().toEqualTypeOf<Add<Integer<3, "-">, Integer<3, "+">>>(),
+		expectTypeOf<Integer<"+", 0>>().toEqualTypeOf<Add<Integer<"-", 3>, Integer<"+", 3>>>(),
 		// B > A
-		expectTypeOf<Integer<2, "+">>().toEqualTypeOf<Add<Integer<3, "-">, Integer<5, "+">>>(),
+		expectTypeOf<Integer<"+", 2>>().toEqualTypeOf<Add<Integer<"-", 3>, Integer<"+", 5>>>(),
 	],
 	// -A + -B
-	expectTypeOf<Integer<5, "-">>().toEqualTypeOf<Add<Integer<2, "-">, Integer<3, "-">>>(),
+	expectTypeOf<Integer<"-", 5>>().toEqualTypeOf<Add<Integer<"-", 2>, Integer<"-", 3>>>(),
 ];

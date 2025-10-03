@@ -29,26 +29,26 @@ const test_Sub = [
 	// +A - +B => A - B
 	[
 		// A < B
-		expectTypeOf<Integer<2, "-">>().toEqualTypeOf<Sub<Integer<3, "+">, Integer<5, "+">>>(),
+		expectTypeOf<Integer<"-", 2>>().toEqualTypeOf<Sub<Integer<"+", 3>, Integer<"+", 5>>>(),
 		// A == B
-		expectTypeOf<Integer<0, "+">>().toEqualTypeOf<Sub<Integer<3, "+">, Integer<3, "+">>>(),
+		expectTypeOf<Integer<"+", 0>>().toEqualTypeOf<Sub<Integer<"+", 3>, Integer<"+", 3>>>(),
 		// A > B
-		expectTypeOf<Integer<2, "+">>().toEqualTypeOf<Sub<Integer<5, "+">, Integer<3, "+">>>(),
+		expectTypeOf<Integer<"+", 2>>().toEqualTypeOf<Sub<Integer<"+", 5>, Integer<"+", 3>>>(),
 	],
 	// +A - -B => A + B
-	expectTypeOf<Integer<8, "+">>().toEqualTypeOf<Sub<Integer<3, "+">, Integer<5, "-">>>(),
+	expectTypeOf<Integer<"+", 8>>().toEqualTypeOf<Sub<Integer<"+", 3>, Integer<"-", 5>>>(),
 	// -A - +B => -(A + B)
-	expectTypeOf<Integer<8, "-">>().toEqualTypeOf<Sub<Integer<5, "-">, Integer<3, "+">>>(),
+	expectTypeOf<Integer<"-", 8>>().toEqualTypeOf<Sub<Integer<"-", 5>, Integer<"+", 3>>>(),
 	// -A - -B => -A + B
 	[
 		// B < A
-		expectTypeOf<Integer<2, "-">>().toEqualTypeOf<Sub<Integer<5, "-">, Integer<3, "-">>>(),
+		expectTypeOf<Integer<"-", 2>>().toEqualTypeOf<Sub<Integer<"-", 5>, Integer<"-", 3>>>(),
 		// B == A
-		expectTypeOf<Integer<0, "+">>().toEqualTypeOf<Sub<Integer<3, "-">, Integer<3, "-">>>(),
+		expectTypeOf<Integer<"+", 0>>().toEqualTypeOf<Sub<Integer<"-", 3>, Integer<"-", 3>>>(),
 		// B > A
-		expectTypeOf<Integer<2, "+">>().toEqualTypeOf<Sub<Integer<3, "-">, Integer<5, "-">>>(),
+		expectTypeOf<Integer<"+", 2>>().toEqualTypeOf<Sub<Integer<"-", 3>, Integer<"-", 5>>>(),
 	],
-	expectTypeOf<Integer<1, "+">>().toEqualTypeOf<Sub<Integer<2, "-">, Integer<3, "-">>>(),
+	expectTypeOf<Integer<"+", 1>>().toEqualTypeOf<Sub<Integer<"-", 2>, Integer<"-", 3>>>(),
 ];
 
 // 	A	-	B	Result
