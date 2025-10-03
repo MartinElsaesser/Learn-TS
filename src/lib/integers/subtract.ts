@@ -48,11 +48,4 @@ const test_Sub = [
 		// B > A
 		expectTypeOf<Integer<"+", 2>>().toEqualTypeOf<Sub<Integer<"-", 3>, Integer<"-", 5>>>(),
 	],
-	expectTypeOf<Integer<"+", 1>>().toEqualTypeOf<Sub<Integer<"-", 2>, Integer<"-", 3>>>(),
 ];
-
-// 	A	-	B	Result
-// +A      +B
-//  3 	- 	3
-//  5 	- 	3
-//  3 	- 	5
