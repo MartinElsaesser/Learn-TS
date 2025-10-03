@@ -1,6 +1,6 @@
 import { expectTypeOf } from "expect-type";
 import { AnyInteger, Integer } from "./createInteger";
-import { SmallerT } from "./zeroTuples";
+import { SubtractWithSignT } from "./zeroTuples";
 
 export type Add<A extends AnyInteger, B extends AnyInteger> =
 	A["sign"] extends "+" ?
@@ -22,26 +22,6 @@ export type Add<A extends AnyInteger, B extends AnyInteger> =
 				sign: "-";
 			}
 	:	never;
-
-type SubtractWithSignT<A extends number[], B extends number[], _Acc extends number[] = []> =
-	// A - B
-	SmallerT<A, B> extends true ?
-		// A < B (e.g. 2 - 4 = -2)
-		[..._Acc, ...A] extends B ?
-			{
-				number: _Acc;
-				sign: "-";
-			}
-		:	SubtractWithSignT<A, B, [0, ..._Acc]>
-	: // A >= B
-	// A == B (e.g. 4 - 4 = 0)
-	// A > B (e.g. 4 - 2 = 2)
-	[..._Acc, ...B] extends A ?
-		{
-			number: _Acc;
-			sign: "+";
-		}
-	:	SubtractWithSignT<A, B, [0, ..._Acc]>;
 
 // Add Cases:
 const test_Add = [
