@@ -13,8 +13,7 @@ type GenericInteger = {
 	sign: "+" | "-";
 };
 
-// add
-type Add<A extends GenericInteger, B extends GenericInteger> =
+export type Add<A extends GenericInteger, B extends GenericInteger> =
 	A["sign"] extends "+" ?
 		B["sign"] extends "+" ?
 			// +A + +B
@@ -23,10 +22,11 @@ type Add<A extends GenericInteger, B extends GenericInteger> =
 				sign: "+";
 			}
 		:	// +A + -B
-			"+A + -B"
+			SubtractWithSignT<A["number"], B["number"]>
 	: A["sign"] extends "-" ?
 		B["sign"] extends "+" ?
-			"-A + +B"
+			// -A + +B
+			SubtractWithSignT<B["number"], A["number"]>
 		:	// -A + -B
 			{
 				number: [...A["number"], ...B["number"]];
@@ -34,41 +34,25 @@ type Add<A extends GenericInteger, B extends GenericInteger> =
 			}
 	:	never;
 
-// subtract (A - B)
-// cases:
-// 1. A > B   4-2=2
-//  A			B			Result
-//  [0,0,0,0] 	[0,0]		[]
-//  [0,0,0,0] 	[0,0]		[0]
-//  [0,0,0,0] 	[0,0]		[0,0]
-// 2. A == B  4-4=0
-//  [0,0,0,0] 	[0,0,0,0]	[]
-// 3. A < B   2-4=-2
-//  [0,0] 		[0,0,0,0]	[]
-//  [0,0] 		[0,0,0,0]	[0]
-//  [0,0] 		[0,0,0,0]	[0,0]
-type Add_Pos_Neg<A extends number[], B extends number[], _Acc extends number[] = []> =
+type SubtractWithSignT<A extends number[], B extends number[], _Acc extends number[] = []> =
+	// A - B
 	SmallerT<A, B> extends true ?
-		// A < B
+		// A < B (e.g. 2 - 4 = -2)
 		[..._Acc, ...A] extends B ?
 			{
 				number: _Acc;
 				sign: "-";
 			}
-		:	Add_Pos_Neg<A, B, [0, ..._Acc]>
+		:	SubtractWithSignT<A, B, [0, ..._Acc]>
 	: // A >= B
+	// A == B (e.g. 4 - 4 = 0)
+	// A > B (e.g. 4 - 2 = 2)
 	[..._Acc, ...B] extends A ?
 		{
 			number: _Acc;
 			sign: "+";
 		}
-	:	Add_Pos_Neg<A, B, [0, ..._Acc]>;
-type test1 = Add_Pos_Neg<[0, 0], [0]>;
-//   ^?
-type test2 = Add_Pos_Neg<[0, 0], [0, 0]>;
-//   ^?
-type test3 = Add_Pos_Neg<[0], [0, 0]>;
-//   ^?
+	:	SubtractWithSignT<A, B, [0, ..._Acc]>;
 
 type SmallerT<A extends number[], B extends number[]> =
 	A extends [infer A_First, ...infer A_Rest extends number[]] ?
@@ -88,15 +72,15 @@ type SmallerOrEqualT<A extends number[], B extends number[]> =
 		true // A is empty && B is full
 	:	true; // A is empty && B is empty
 
-type test = SmallerOrEqualT<[0], [0, 0]>;
+type test = SmallerOrEqualT<[], []>;
 //   ^?
+
+// A				B
+// [0,0]			[0,0,0]
 
 type AddI<A extends number, B extends number> = Add<Integer<A>, Integer<B>>["length"];
 
-type SubT<A extends number[], B extends number[], TRes extends number[] = []> =
-	[...TRes, ...B] extends A ? TRes : SubT<A, B, [0, ...TRes]>;
-
-type SubI<A extends number, B extends number> = (SubT<Integer<A>, Integer<B>> & number[])["length"];
+// type SubI<A extends number, B extends number> = (SubT<Integer<A>, Integer<B>> & number[])["length"];
 
 // multiply
 type MultT<
@@ -118,49 +102,31 @@ type DivI<A extends number, B extends number> = (DivT<Integer<A>, Integer<B>> & 
 type calc = DivI<AddI<MultI<2, 3>, 6>, 4>; // ((2*3) +7) / 4
 //   ^?
 
-const test_Integer = [
-	expectTypeOf<[]>().toEqualTypeOf<Integer<0>>(),
-	expectTypeOf<[0]>().toEqualTypeOf<Integer<1>>(),
-	expectTypeOf<[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]>().toEqualTypeOf<Integer<10>>(),
+// Add Cases:
+const test_Add = [
+	// +A + +B
+	expectTypeOf<Integer<5, "+">>().toEqualTypeOf<Add<Integer<2, "+">, Integer<3, "+">>>(),
+	// +A + -B
+	[
+		// A < B
+		expectTypeOf<Integer<2, "-">>().toEqualTypeOf<Add<Integer<3, "+">, Integer<5, "-">>>(),
+		// A == B
+		expectTypeOf<Integer<0, "+">>().toEqualTypeOf<Add<Integer<3, "+">, Integer<3, "-">>>(),
+		// A > B
+		expectTypeOf<Integer<2, "+">>().toEqualTypeOf<Add<Integer<5, "+">, Integer<3, "-">>>(),
+	],
+	// -A + +B
+	[
+		// B < A
+		expectTypeOf<Integer<2, "-">>().toEqualTypeOf<Add<Integer<5, "-">, Integer<3, "+">>>(),
+		// B == A
+		expectTypeOf<Integer<0, "+">>().toEqualTypeOf<Add<Integer<3, "-">, Integer<3, "+">>>(),
+		// B > A
+		expectTypeOf<Integer<2, "+">>().toEqualTypeOf<Add<Integer<3, "-">, Integer<5, "+">>>(),
+	],
+	// -A + -B
+	expectTypeOf<Integer<5, "-">>().toEqualTypeOf<Add<Integer<2, "-">, Integer<3, "-">>>(),
 ];
-
-const test_AddT = [
-	expectTypeOf<[]>().toEqualTypeOf<Add<[], []>>(),
-	expectTypeOf<[0]>().toEqualTypeOf<Add<[0], []>>(),
-	expectTypeOf<[0]>().toEqualTypeOf<Add<[], [0]>>(),
-	expectTypeOf<[0, 0, 0, 0, 0]>().toEqualTypeOf<Add<[0, 0], [0, 0, 0]>>(),
-];
-
-const test_SubT = [
-	expectTypeOf<[]>().toEqualTypeOf<Add<[], []>>(),
-	expectTypeOf<[0]>().toEqualTypeOf<Add<[0], []>>(),
-	expectTypeOf<[0]>().toEqualTypeOf<Add<[], [0]>>(),
-	expectTypeOf<[0, 0, 0, 0, 0]>().toEqualTypeOf<Add<[0, 0], [0, 0, 0]>>(),
-];
-
-type Tup7 = {
-	number: [0, 0, 0, 0, 0, 0, 0];
-	sign: "+";
-};
-
-type Tup3 = {
-	number: [0, 0, 0];
-	sign: "+";
-};
-
-type Tup_2 = {
-	number: [0, 0];
-	sign: "-";
-};
-
-type Tup_4 = {
-	number: [0, 0, 0, 0];
-	sign: "-";
-};
-
-type testAdd = Add_Pos_Neg<Tup_2, Tup_4>; // 7 + 3
-//   ^?
-// 3 - 5
 
 // three representations:
 // as tuple of zeroes e.g. [0,0,0]
