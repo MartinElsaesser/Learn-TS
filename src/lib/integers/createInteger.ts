@@ -5,7 +5,7 @@ export type Integer<N extends number, Sign extends "+" | "-"> = {
 	sign: Sign;
 };
 
-export type GenericInteger = {
+export type AnyInteger = {
 	number: number[];
 	sign: "+" | "-";
 };

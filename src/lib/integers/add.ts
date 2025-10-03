@@ -1,8 +1,8 @@
 import { expectTypeOf } from "expect-type";
-import { GenericInteger, Integer } from "./generic";
+import { AnyInteger, Integer } from "./createInteger";
 import { SmallerT } from "./zeroTuples";
 
-export type Add<A extends GenericInteger, B extends GenericInteger> =
+export type Add<A extends AnyInteger, B extends AnyInteger> =
 	A["sign"] extends "+" ?
 		B["sign"] extends "+" ?
 			// +A + +B
