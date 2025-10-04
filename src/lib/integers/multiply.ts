@@ -32,16 +32,16 @@ type MultT<
 
 // Add Cases:
 const test_Mult = [
-	// +A + +B
+	// +A * +B
 	expectTypeOf<Integer<"+", 6>>().toEqualTypeOf<Mult<Integer<"+", 2>, Integer<"+", 3>>>(),
 	expectTypeOf<Integer<"+", 0>>().toEqualTypeOf<Mult<Integer<"+", 0>, Integer<"+", 0>>>(),
-	// +A + -B
+	// +A * -B
 	expectTypeOf<Integer<"-", 6>>().toEqualTypeOf<Mult<Integer<"+", 2>, Integer<"-", 3>>>(),
 	expectTypeOf<Integer<"+", 0>>().toEqualTypeOf<Mult<Integer<"+", 0>, Integer<"-", 0>>>(),
-	// -A + +B
+	// -A * +B
 	expectTypeOf<Integer<"-", 6>>().toEqualTypeOf<Mult<Integer<"-", 2>, Integer<"+", 3>>>(),
 	expectTypeOf<Integer<"+", 0>>().toEqualTypeOf<Mult<Integer<"-", 0>, Integer<"+", 0>>>(),
-	// -A + -B
+	// -A * -B
 	expectTypeOf<Integer<"+", 6>>().toEqualTypeOf<Mult<Integer<"-", 2>, Integer<"-", 3>>>(),
 	expectTypeOf<Integer<"+", 0>>().toEqualTypeOf<Mult<Integer<"-", 0>, Integer<"-", 0>>>(),
 ];
