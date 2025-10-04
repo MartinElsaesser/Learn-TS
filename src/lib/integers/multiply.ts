@@ -31,7 +31,7 @@ type MultT<
 > = A extends CountA ? TRes : MultT<A, B, [0, ...CountA], [...B, ...TRes]>;
 
 // Add Cases:
-const test_Add = [
+const test_Mult = [
 	// +A + +B
 	expectTypeOf<Integer<"+", 6>>().toEqualTypeOf<Mult<Integer<"+", 2>, Integer<"+", 3>>>(),
 	expectTypeOf<Integer<"+", 0>>().toEqualTypeOf<Mult<Integer<"+", 0>, Integer<"+", 0>>>(),
