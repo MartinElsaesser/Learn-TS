@@ -39,6 +39,9 @@ expect<IsNarrower<string, "Horse">>().toEqualTypeOf<false>();
 // objects
 expect<IsNarrower<{ name: "Camila" }, Record<string, any>>>().toEqualTypeOf<true>();
 expect<IsNarrower<{ name: "Camila"; age: 9 }, Record<string, any>>>().toEqualTypeOf<true>();
+expect<IsNarrower<{ name: "Camila"; age: 9 }, { name: "Camila" }>>().toEqualTypeOf<true>();
+
+expect<IsNarrower<{ name: "Camila" }, { name: "Camila"; age: 9 }>>().toEqualTypeOf<false>(); // not narrower
 
 let obj = { name: "Camila", age: 9 } as const;
 let rec: Record<string, any> = { test: [1, 2] };
