@@ -64,3 +64,5 @@ const testSuite2 = [
 	// path lookup failed
 	expected<never>().toEqualTypeOf<PropertyPathLookup<TestPerson, ["doesNotExist"]>>(),
 ];
+
+export type Intersection<A, B> = A & B extends infer U ? { [P in keyof U]: U[P] } : never;
