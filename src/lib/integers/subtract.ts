@@ -3,7 +3,7 @@ import { AnyInteger, Integer } from "./createInteger";
 import { SubtractWithSignT } from "./zeroTuples";
 
 // +A - -B
-type Sub<A extends AnyInteger, B extends AnyInteger> =
+export type Sub<A extends AnyInteger, B extends AnyInteger> =
 	A["sign"] extends "+" ?
 		B["sign"] extends "+" ?
 			// +A - +B
