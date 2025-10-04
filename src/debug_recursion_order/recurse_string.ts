@@ -1,12 +1,12 @@
 import { PrettifyRecursive } from "../MyPrettify";
 
-type Lexer<S extends string, Count extends number = 0> =
+type Lexer<S extends string, _Count extends number[] = []> =
 	S extends `${infer S1}&${infer Rest}` ?
 		Join<
 			S1,
 			// iterative call of Lexer type
-			Lexer<Rest, Add<Count, 1> & number>,
-			Count
+			Lexer<Rest, [0, ..._Count]>,
+			_Count["length"]
 		>
 	:	S;
 
@@ -18,11 +18,7 @@ type Lexer<S extends string, Count extends number = 0> =
 // 				a 		b
 // Count = 0	S1		Rest
 
-type Join<
-	R1 extends string,
-	R2 extends string,
-	Count extends number,
-> = `${Count}[ S1:${R1} Rest:${R2}]`;
+type Join<R1 extends string, R2 extends string, Count extends number> = `{${Count},${R1},${R2}}`;
 
 type debug4 = PrettifyRecursive<Lexer<"a&b&c&d">>;
 //   ^?

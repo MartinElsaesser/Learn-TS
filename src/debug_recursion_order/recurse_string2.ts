@@ -1,16 +1,24 @@
 import { PrettifyRecursive } from "../MyPrettify";
 
-type Lexer<S extends string, Collector extends string = "", Count extends number = 0> =
-	S extends `${infer S1}&${infer Rest}` ?
+type Lexer<S extends string, _Acc extends string = "", _Count extends number[] = []> =
+	S extends `${infer First}&${infer Rest}` ?
 		Lexer<
 			// S
 			Rest,
-			// Collector
-			Join<S1, Collector, Count>,
-			// Count
-			Add<Count, 1> & number
+			// _Acc
+			Join<First, _Acc, _Count["length"]>,
+			// _Count
+			[0, ..._Count]
 		>
-	:	Collector;
+	: S extends "" ? _Acc
+	: Lexer<
+			// S
+			"",
+			// _Acc
+			Join<S, _Acc, _Count["length"]>,
+			// _Count
+			[0, ..._Count]
+		>;
 
 // 				"" 		a 		b 		c 		d
 // Count = 0	Rest	S1
@@ -21,11 +29,7 @@ type Lexer<S extends string, Collector extends string = "", Count extends number
 // 				a 		b
 // Count = 0	S1		Rest
 
-type Join<
-	R1 extends string,
-	R2 extends string,
-	Count extends number,
-> = `${Count}[ S1:${R1} Rest:${R2}]`;
+type Join<R1 extends string, R2 extends string, Count extends number> = `{${Count},${R1},${R2}}`;
 
 type debug4 = PrettifyRecursive<Lexer<"a&b&c&d">>;
 //   ^?
