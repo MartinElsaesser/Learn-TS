@@ -22,6 +22,13 @@ export type Xor<Bool1 extends boolean, Bool2 extends boolean> =
 
 export type Not<Bool extends boolean> = Bool extends true ? false : true;
 
+/**
+Returns a boolean for whether given two types are equal.
+@link https://github.com/microsoft/TypeScript/issues/27024#issuecomment-421529650
+*/
+type IsEqual<T, U> =
+	(<G>() => G extends T ? 1 : 2) extends <G>() => G extends U ? 1 : 2 ? true : false;
+
 const testAnd = [
 	expected<true>().toEqualTypeOf<And<true, true>>(),
 	expected<false>().toEqualTypeOf<And<true, false>>(),
