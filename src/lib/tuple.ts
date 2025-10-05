@@ -1,11 +1,6 @@
 import { expectTypeOf as expected } from "expect-type";
 import * as $String from "./string";
-export type ExcludeLastElement<T extends readonly unknown[]> =
-	T extends [infer F, ...infer R] ?
-		R extends [] ?
-			[]
-		:	[F, ...ExcludeLastElement<R>]
-	:	[];
+export type ExcludeLastElement<T extends readonly unknown[]> = T extends [...infer F, any] ? F : [];
 
 const testSuite1 = [
 	expected<[]>().toEqualTypeOf<ExcludeLastElement<[]>>(),
@@ -15,11 +10,7 @@ const testSuite1 = [
 ];
 
 export type OnlyLastElement<T extends readonly unknown[]> =
-	T extends [infer F, ...infer R] ?
-		R extends [] ?
-			F
-		:	OnlyLastElement<R>
-	:	never;
+	T extends [...any[], infer L] ? L : never;
 
 const testSuite2 = [
 	expected<never>().toEqualTypeOf<OnlyLastElement<[]>>(),
