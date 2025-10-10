@@ -1,4 +1,4 @@
-type AddWithoutCarry = [
+export type AddWithoutCarry = [
 	[
 		{ carry: 0; digit: 0 }, // 0 + 0
 		{ carry: 0; digit: 1 }, // 0 + 1
@@ -131,9 +131,8 @@ Carry Out	1
 
 */
 
-// 0 + (1+1)
 type NumberWithCarry = { carry: number; digit: number };
-type AddWithCarry<
+export type AddWithCarry<
 	D1 extends number,
 	D2 extends number,
 	CarryIn extends number,
@@ -146,17 +145,13 @@ type AddWithCarry<
 	digit: _D1plusD2plusCarryIn["digit"];
 };
 
-type Result = AddWithCarry<9, 1, 1>;
-//   ^?
-
-///
 type ReverseString<T extends string> =
 	T extends `${infer F}${infer R}` ? `${ReverseString<R>}${F}` : T;
 
 type GetFirstOrDefault<T extends string, Default extends string> =
 	T extends `${infer F}${infer R}` ? F : Default;
 
-type ToNumber<T extends string> = T extends `${infer N extends number}` ? N : never;
+type ParseNumber<T extends string> = T extends `${infer N extends number}` ? N : never;
 
 type GetRestOrDefault<T extends string, Default extends string> =
 	T extends `${infer F}${infer R}` ? R : Default;
@@ -165,8 +160,8 @@ type AddReversed<
 	D1 extends string,
 	D2 extends string,
 	_Carry extends number = 0,
-	_D1First extends number = ToNumber<GetFirstOrDefault<D1, "0">>,
-	_D2First extends number = ToNumber<GetFirstOrDefault<D2, "0">>,
+	_D1First extends number = ParseNumber<GetFirstOrDefault<D1, "0">>,
+	_D2First extends number = ParseNumber<GetFirstOrDefault<D2, "0">>,
 	_R1 extends string = GetRestOrDefault<D1, "">,
 	_R2 extends string = GetRestOrDefault<D2, "">,
 	_Result extends NumberWithCarry = AddWithCarry<_D1First, _D2First, _Carry>,
@@ -177,28 +172,16 @@ type AddReversed<
 		:	`${_Result["digit"]}${AddReversed<_R1, _R2, _Result["carry"]>}`
 	:	`${_Result["digit"]}${AddReversed<_R1, _R2, _Result["carry"]>}`;
 
-// 29 + 8 = 37
-type test = AddReversed<"999", "1">;
-//   ^?
-
-//  10
-// 	99
-//   1
-// ----
-//   0
-type RemoveLeadingChar<T extends string, Char extends string> =
-	T extends `${infer F}${infer R}` ?
-		F extends Char ?
-			RemoveLeadingChar<R, Char>
-		:	T
-	:	T;
-
-type Add<
+export type Add<
 	T1 extends number,
 	T2 extends number,
 	_ReversedResult extends string = AddReversed<ReverseString<`${T1}`>, ReverseString<`${T2}`>>,
 	_Result extends string = ReverseString<_ReversedResult>,
-> = ToNumber<_Result>;
+> = ParseNumber<_Result>;
 
-type result = Add<99, 99>;
+type DebugAddWithCarry = AddWithCarry<9, 1, 1>;
+//   ^?
+type DebugAddReversed = AddReversed<"999", "9">;
+//   ^?
+type DebugAdd = Add<999, 9999>;
 //   ^?
