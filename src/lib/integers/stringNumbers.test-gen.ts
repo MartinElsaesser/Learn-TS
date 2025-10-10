@@ -2,6 +2,9 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 let fileContent = `import { expectTypeOf } from "vitest";\n`;
+fileContent += `import { AddWithCarry, AddWithoutCarry } from "./stringNumbers.js";\n`;
+
+fileContent += `// test AddWithoutCarry\n`;
 for (let number1 = 0; number1 <= 9; number1++) {
 	for (let number2 = 0; number2 <= 9; number2++) {
 		const sum = number1 + number2;
@@ -11,6 +14,7 @@ for (let number1 = 0; number1 <= 9; number1++) {
 	}
 }
 
+fileContent += `// test AddWithCarry\n`;
 for (let number1 = 0; number1 <= 9; number1++) {
 	for (let number2 = 0; number2 <= 9; number2++) {
 		for (let carryIn = 0; carryIn <= 9; carryIn++) {
