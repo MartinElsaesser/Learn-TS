@@ -1,3 +1,5 @@
+import { NumberWithCarry, ParseNumber, StringToNumberTuple } from "./utils";
+
 export type AddWithoutCarry = [
 	[
 		{ carry: 0; digit: 0 }, // 0 + 0
@@ -120,6 +122,7 @@ export type AddWithoutCarry = [
 		{ carry: 1; digit: 8 }, // 9 + 9
 	],
 ];
+
 /*
 AddWithCarry Example:
 
@@ -131,8 +134,6 @@ D1 + D2 + C   | 22
 Result 		  | 2
 Carry Out	  | 2
 */
-
-type NumberWithCarry = { carry: number; digit: number };
 export type AddWithCarry<
 	D1 extends number,
 	D2 extends number,
@@ -145,8 +146,6 @@ export type AddWithCarry<
 	carry: _AddCarries["digit"];
 	digit: _D1plusD2plusCarryIn["digit"];
 };
-
-type ParseNumber<T extends string> = T extends `${infer N extends number}` ? N : never;
 
 type AddNumberTuple<Num1 extends number[], Num2 extends number[], _Carry extends number = 0> =
 	Num1 extends [...infer Num1Rest extends number[], infer Num1Last extends number] ?
@@ -182,9 +181,6 @@ type AddNumberTuple<Num1 extends number[], Num2 extends number[], _Carry extends
 		}`
 	:	// both Num1 and Num2 are empty
 		`${_Carry extends 0 ? "" : _Carry}`;
-
-type StringToNumberTuple<S extends string> =
-	S extends `${infer F extends number}${infer R}` ? [F, ...StringToNumberTuple<R>] : [];
 
 export type UnsignedAdd<T1 extends number, T2 extends number> = ParseNumber<
 	AddNumberTuple<StringToNumberTuple<`${T1}`>, StringToNumberTuple<`${T2}`>>
