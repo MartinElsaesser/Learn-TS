@@ -156,11 +156,33 @@ type SplitIntoNumberAndRest<T extends string> =
 type AddReversed<Num1 extends number[], Num2 extends number[], _Carry extends number = 0> =
 	Num1 extends [...infer Num1Rest extends number[], infer Num1Last extends number] ?
 		Num2 extends [...infer Num2Rest extends number[], infer Num2Last extends number] ?
-			`${AddReversed<Num1Rest, Num2Rest, AddWithCarry<Num1Last, Num2Last, _Carry>["carry"]>}${AddWithCarry<Num1Last, Num2Last, _Carry>["digit"]}`
-		:	`${AddReversed<Num1Rest, [], AddWithCarry<Num1Last, 0, _Carry>["carry"]>}${AddWithCarry<Num1Last, 0, _Carry>["digit"]}`
+			// Num1 and Num2 have digits
+			`${
+				// recursive call to compute rest of digits
+				AddReversed<Num1Rest, Num2Rest, AddWithCarry<Num1Last, Num2Last, _Carry>["carry"]>
+			}${
+				// compute one digit
+				AddWithCarry<Num1Last, Num2Last, _Carry>["digit"]
+			}`
+		:	// Num1 has digits, Num2 is empty
+			`${
+				// recursive call to compute rest of digits
+				AddReversed<Num1Rest, [], AddWithCarry<Num1Last, 0, _Carry>["carry"]>
+			}${
+				// compute one digit
+				AddWithCarry<Num1Last, 0, _Carry>["digit"]
+			}`
 	: Num2 extends [...infer Num2Rest extends number[], infer Num2Last extends number] ?
-		`${AddReversed<[], Num2Rest, AddWithCarry<0, Num2Last, _Carry>["carry"]>}${AddWithCarry<0, Num2Last, _Carry>["digit"]}`
-	:	`${_Carry extends 0 ? "" : _Carry}`;
+		// Num2 has digits, Num1 is empty
+		`${
+			// recursive call to compute rest of digits
+			AddReversed<[], Num2Rest, AddWithCarry<0, Num2Last, _Carry>["carry"]>
+		}${
+			// compute one digit
+			AddWithCarry<0, Num2Last, _Carry>["digit"]
+		}`
+	:	// both Num1 and Num2 are empty
+		`${_Carry extends 0 ? "" : _Carry}`;
 
 type StringToNumberArray<S extends string> =
 	S extends `${infer F extends number}${infer R}` ? [F, ...StringToNumberArray<R>] : [];
