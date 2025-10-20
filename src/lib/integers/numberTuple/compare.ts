@@ -1,7 +1,8 @@
 import { P } from "vitest/dist/chunks/environment.d.cL3nLXbE.js";
 import { ParseNumber, StringToNumberTuple } from "./utils";
 
-export type Equal<T1 extends number, T2 extends number> = [T1, T2] extends [T2, T1] ? true : false;
+export type EqualUnsigned<T1 extends number, T2 extends number> =
+	[T1, T2] extends [T2, T1] ? true : false;
 
 type IsSmallerTable = [
 	[
@@ -267,7 +268,7 @@ type IsSmallerNumberTuple<
 		true
 	:	// Num1.length === Num2.length
 		_Bool;
-export type IsSmaller<T1 extends number, T2 extends number> = IsSmallerNumberTuple<
+export type IsSmallerUnsigned<T1 extends number, T2 extends number> = IsSmallerNumberTuple<
 	StringToNumberTuple<`${T1}`>,
 	StringToNumberTuple<`${T2}`>
 >;
@@ -291,12 +292,37 @@ type IsGreaterNumberTuple<
 	:	// Num1.length === Num2.length
 		_Bool;
 
-export type IsGreater<T1 extends number, T2 extends number> = IsGreaterNumberTuple<
+export type IsGreaterUnsigned<T1 extends number, T2 extends number> = IsGreaterNumberTuple<
 	StringToNumberTuple<`${T1}`>,
 	StringToNumberTuple<`${T2}`>
 >;
 
-export type IsGreaterOrEqual<T1 extends number, T2 extends number> =
-	IsSmaller<T1, T2> extends true ? false : true;
-export type IsSmallerOrEqual<T1 extends number, T2 extends number> =
-	IsGreater<T1, T2> extends true ? false : true;
+export type IsGreater<
+	T1 extends number,
+	T2 extends number,
+	Num1 extends ["+" | "-", number] = GetSignAndNumber<T1>,
+	Num2 extends ["+" | "-", number] = GetSignAndNumber<T2>,
+> =
+	Num1[0] extends "+" ?
+		Num2[0] extends "+" ?
+			// Num1 positive, Num2 positive
+			IsGreaterUnsigned<Num1[1], Num2[1]>
+		:	// Num1 positive, Num2 negative
+			true
+	: Num2[0] extends "+" ?
+		// Num1 negative, Num2 positive
+		false
+	:	// Num1 negative, Num2 negative
+		IsSmallerUnsigned<Num1[1], Num2[1]>;
+
+type test = IsGreater<-10, 1>;
+//   ^?
+
+type GetSignAndNumber<T extends number> =
+	`${T}` extends `-${infer PositiveNumberString}` ? ["-", ParseNumber<PositiveNumberString>]
+	:	["+", T];
+
+export type IsGreaterOrEqualUnsigned<T1 extends number, T2 extends number> =
+	IsSmallerUnsigned<T1, T2> extends true ? false : true;
+export type IsSmallerOrEqualUnsigned<T1 extends number, T2 extends number> =
+	IsGreaterUnsigned<T1, T2> extends true ? false : true;
