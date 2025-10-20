@@ -1,18 +1,21 @@
 import { describe, it } from "vitest";
 import { attest, bench } from "@ark/attest";
-import { Add as AddT } from "./add.js";
-import { Integer } from "./createInteger.js";
 import { Add } from "./stringNumbers.js";
+import { AddTI } from "./tuple/AddTI.js";
+import { IntegerT } from "./tuple/IntegerT.js";
 
-type baseLineTupleAdd = AddT<Integer<"+", 100>, Integer<"+", 100>>;
-type baseLineStringAdd = Add<100, 100>;
-
-bench("tuple based Addition", () => {
+bench("AddTi (baseline)", () => {
 	// old addition implementation
-	return {} as AddT<Integer<"+", 300>, Integer<"+", 400>>;
-}).types([79572, "instantiations"]);
+	return {} as AddTI<IntegerT<"+", 300>, IntegerT<"+", 400>>;
+}).types([84945, "instantiations"]);
 
-bench("string based Addition", () => {
+const stringAddBaseline = 412;
+bench("Add (baseline)", () => {
 	// new addition implementation
 	return {} as Add<300, 400>;
-}).types([355, "instantiations"]);
+}).types([412, "instantiations"]);
+
+bench("Add (99999999 + 9999999)", () => {
+	// new addition implementation
+	return {} as Add<99999999, 9999999>;
+}).types([stringAddBaseline, "instantiations"]);
