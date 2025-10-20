@@ -153,30 +153,25 @@ type ParseNumber<T extends string> = T extends `${infer N extends number}` ? N :
 type SplitIntoNumberAndRest<T extends string> =
 	T extends `${infer F extends number}${infer R}` ? [F, R] : [0, ""];
 
-type AddReversed<
-	D1 extends string,
-	D2 extends string,
-	_Carry extends number = 0,
-	D1Split extends [number, string] = SplitIntoNumberAndRest<D1>,
-	D2Split extends [number, string] = SplitIntoNumberAndRest<D2>,
-	_Result extends NumberWithCarry = AddWithCarry<D1Split[0], D2Split[0], _Carry>,
-> =
-	D1Split[1] extends "" ?
-		D2Split[1] extends "" ?
-			`${_Result["digit"]}${_Result["carry"] extends 0 ? "" : _Result["carry"]}`
-		:	`${_Result["digit"]}${AddReversed<D1Split[1], D2Split[1], _Result["carry"]>}`
-	:	`${_Result["digit"]}${AddReversed<D1Split[1], D2Split[1], _Result["carry"]>}`;
+type AddReversed<Num1 extends number[], Num2 extends number[], _Carry extends number = 0> =
+	Num1 extends [...infer Num1Rest extends number[], infer Num1Last extends number] ?
+		Num2 extends [...infer Num2Rest extends number[], infer Num2Last extends number] ?
+			`${AddReversed<Num1Rest, Num2Rest, AddWithCarry<Num1Last, Num2Last, _Carry>["carry"]>}${AddWithCarry<Num1Last, Num2Last, _Carry>["digit"]}`
+		:	`${AddReversed<Num1Rest, [], AddWithCarry<Num1Last, 0, _Carry>["carry"]>}${AddWithCarry<Num1Last, 0, _Carry>["digit"]}`
+	: Num2 extends [...infer Num2Rest extends number[], infer Num2Last extends number] ?
+		`${AddReversed<[], Num2Rest, AddWithCarry<0, Num2Last, _Carry>["carry"]>}${AddWithCarry<0, Num2Last, _Carry>["digit"]}`
+	:	`${_Carry extends 0 ? "" : _Carry}`;
 
-export type Add<
-	T1 extends number,
-	T2 extends number,
-	_ReversedResult extends string = AddReversed<ReverseString<`${T1}`>, ReverseString<`${T2}`>>,
-	_Result extends string = ReverseString<_ReversedResult>,
-> = ParseNumber<_Result>;
+type StringToNumberArray<S extends string> =
+	S extends `${infer F extends number}${infer R}` ? [F, ...StringToNumberArray<R>] : [];
+
+export type Add<T1 extends number, T2 extends number> = ParseNumber<
+	AddReversed<StringToNumberArray<`${T1}`>, StringToNumberArray<`${T2}`>>
+>;
 
 type DebugAddWithCarry = AddWithCarry<9, 1, 1>;
 //   ^?
-type DebugAddReversed = AddReversed<"999", "9">;
+type DebugAddReversed = AddReversed<[9, 9, 9], [9]>;
 //   ^?
 type DebugAdd = Add<999, 9999>;
 //   ^?
