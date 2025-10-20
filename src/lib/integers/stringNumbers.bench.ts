@@ -15,7 +15,7 @@ bench("Add (baseline)", () => {
 	return {} as Add<300, 400>;
 }).types([412, "instantiations"]);
 
-bench("Add (99999999 + 9999999)", () => {
+bench("Add (4503599627370495 + 4503599627370495)", () => {
 	// new addition implementation
-	return {} as Add<99999999, 9999999>;
+	return {} as Add<4503599627370495, 4503599627370495>;
 }).types([stringAddBaseline, "instantiations"]);
