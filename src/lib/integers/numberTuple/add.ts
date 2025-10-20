@@ -121,6 +121,8 @@ export type AddWithoutCarry = [
 	],
 ];
 /*
+AddWithCarry Example:
+
 Carry In	  | 5
 D1			  | 9
 D2			  | 8
@@ -184,13 +186,6 @@ type AddNumberTuple<Num1 extends number[], Num2 extends number[], _Carry extends
 type StringToNumberTuple<S extends string> =
 	S extends `${infer F extends number}${infer R}` ? [F, ...StringToNumberTuple<R>] : [];
 
-export type Add<T1 extends number, T2 extends number> = ParseNumber<
+export type UnsignedAdd<T1 extends number, T2 extends number> = ParseNumber<
 	AddNumberTuple<StringToNumberTuple<`${T1}`>, StringToNumberTuple<`${T2}`>>
 >;
-
-type DebugAddWithCarry = AddWithCarry<9, 8, 5>;
-//   ^?
-type DebugAddReversed = AddNumberTuple<[9, 9, 9], [9]>;
-//   ^?
-type DebugAdd = Add<999, 9999>;
-//   ^?

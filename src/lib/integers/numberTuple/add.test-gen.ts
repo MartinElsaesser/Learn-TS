@@ -2,7 +2,7 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 let fileContent = `import { expectTypeOf } from "vitest";\n`;
-fileContent += `import { AddWithCarry, AddWithoutCarry } from "./stringNumbers.js";\n`;
+fileContent += `import { AddWithCarry, AddWithoutCarry } from "./add.js";\n`;
 
 fileContent += `// test AddWithoutCarry\n`;
 for (let number1 = 0; number1 <= 9; number1++) {
