@@ -148,29 +148,24 @@ export type AddWithCarry<
 type ReverseString<T extends string> =
 	T extends `${infer F}${infer R}` ? `${ReverseString<R>}${F}` : T;
 
-type GetFirstOrDefault<T extends string, Default extends string> =
-	T extends `${infer F}${infer R}` ? F : Default;
-
 type ParseNumber<T extends string> = T extends `${infer N extends number}` ? N : never;
 
-type GetRestOrDefault<T extends string, Default extends string> =
-	T extends `${infer F}${infer R}` ? R : Default;
+type SplitIntoNumberAndRest<T extends string> =
+	T extends `${infer F extends number}${infer R}` ? [F, R] : [0, ""];
 
 type AddReversed<
 	D1 extends string,
 	D2 extends string,
 	_Carry extends number = 0,
-	_D1First extends number = ParseNumber<GetFirstOrDefault<D1, "0">>,
-	_D2First extends number = ParseNumber<GetFirstOrDefault<D2, "0">>,
-	_R1 extends string = GetRestOrDefault<D1, "">,
-	_R2 extends string = GetRestOrDefault<D2, "">,
-	_Result extends NumberWithCarry = AddWithCarry<_D1First, _D2First, _Carry>,
+	D1Split extends [number, string] = SplitIntoNumberAndRest<D1>,
+	D2Split extends [number, string] = SplitIntoNumberAndRest<D2>,
+	_Result extends NumberWithCarry = AddWithCarry<D1Split[0], D2Split[0], _Carry>,
 > =
-	_R1 extends "" ?
-		_R2 extends "" ?
+	D1Split[1] extends "" ?
+		D2Split[1] extends "" ?
 			`${_Result["digit"]}${_Result["carry"] extends 0 ? "" : _Result["carry"]}`
-		:	`${_Result["digit"]}${AddReversed<_R1, _R2, _Result["carry"]>}`
-	:	`${_Result["digit"]}${AddReversed<_R1, _R2, _Result["carry"]>}`;
+		:	`${_Result["digit"]}${AddReversed<D1Split[1], D2Split[1], _Result["carry"]>}`
+	:	`${_Result["digit"]}${AddReversed<D1Split[1], D2Split[1], _Result["carry"]>}`;
 
 export type Add<
 	T1 extends number,
