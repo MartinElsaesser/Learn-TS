@@ -1,7 +1,7 @@
 import { P } from "vitest/dist/chunks/environment.d.cL3nLXbE.js";
 import { ParseNumber, StringToNumberTuple } from "./utils";
 
-export type EqualUnsigned<T1 extends number, T2 extends number> =
+export type IsEqual<T1 extends number, T2 extends number> =
 	[T1, T2] extends [T2, T1] ? true : false;
 
 type IsSmallerTable = [
@@ -315,7 +315,61 @@ export type IsGreater<
 	:	// Num1 negative, Num2 negative
 		IsSmallerUnsigned<Num1[1], Num2[1]>;
 
-type test = IsGreater<-10, 1>;
+export type IsSmaller<
+	T1 extends number,
+	T2 extends number,
+	Num1 extends ["+" | "-", number] = GetSignAndNumber<T1>,
+	Num2 extends ["+" | "-", number] = GetSignAndNumber<T2>,
+> =
+	Num1[0] extends "+" ?
+		Num2[0] extends "+" ?
+			// Num1 positive, Num2 positive
+			IsSmallerUnsigned<Num1[1], Num2[1]>
+		:	// Num1 positive, Num2 negative
+			false
+	: Num2[0] extends "+" ?
+		// Num1 negative, Num2 positive
+		true
+	:	// Num1 negative, Num2 negative
+		IsGreaterUnsigned<Num1[1], Num2[1]>;
+
+export type IsSmallerOrEqual<
+	T1 extends number,
+	T2 extends number,
+	Num1 extends ["+" | "-", number] = GetSignAndNumber<T1>,
+	Num2 extends ["+" | "-", number] = GetSignAndNumber<T2>,
+> =
+	Num1[0] extends "+" ?
+		Num2[0] extends "+" ?
+			// Num1 positive, Num2 positive
+			IsSmallerOrEqualUnsigned<Num1[1], Num2[1]>
+		:	// Num1 positive, Num2 negative
+			false
+	: Num2[0] extends "+" ?
+		// Num1 negative, Num2 positive
+		true
+	:	// Num1 negative, Num2 negative
+		IsGreaterOrEqualUnsigned<Num1[1], Num2[1]>;
+
+export type IsGreaterOrEqual<
+	T1 extends number,
+	T2 extends number,
+	Num1 extends ["+" | "-", number] = GetSignAndNumber<T1>,
+	Num2 extends ["+" | "-", number] = GetSignAndNumber<T2>,
+> =
+	Num1[0] extends "+" ?
+		Num2[0] extends "+" ?
+			// Num1 positive, Num2 positive
+			IsGreaterOrEqualUnsigned<Num1[1], Num2[1]>
+		:	// Num1 positive, Num2 negative
+			true
+	: Num2[0] extends "+" ?
+		// Num1 negative, Num2 positive
+		false
+	:	// Num1 negative, Num2 negative
+		IsSmallerOrEqualUnsigned<Num1[1], Num2[1]>;
+
+type test = IsEqual<10, 10>;
 //   ^?
 
 type GetSignAndNumber<T extends number> =
