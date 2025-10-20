@@ -146,13 +146,17 @@ export type AddWithCarry<
 
 type ParseNumber<T extends string> = T extends `${infer N extends number}` ? N : never;
 
-type AddReversed<Num1 extends number[], Num2 extends number[], _Carry extends number = 0> =
+type AddNumberTuple<Num1 extends number[], Num2 extends number[], _Carry extends number = 0> =
 	Num1 extends [...infer Num1Rest extends number[], infer Num1Last extends number] ?
 		Num2 extends [...infer Num2Rest extends number[], infer Num2Last extends number] ?
 			// Num1 and Num2 have digits
 			`${
 				// recursive call to compute rest of digits
-				AddReversed<Num1Rest, Num2Rest, AddWithCarry<Num1Last, Num2Last, _Carry>["carry"]>
+				AddNumberTuple<
+					Num1Rest,
+					Num2Rest,
+					AddWithCarry<Num1Last, Num2Last, _Carry>["carry"]
+				>
 			}${
 				// compute one digit
 				AddWithCarry<Num1Last, Num2Last, _Carry>["digit"]
@@ -160,7 +164,7 @@ type AddReversed<Num1 extends number[], Num2 extends number[], _Carry extends nu
 		:	// Num1 has digits, Num2 is empty
 			`${
 				// recursive call to compute rest of digits
-				AddReversed<Num1Rest, [], AddWithCarry<Num1Last, 0, _Carry>["carry"]>
+				AddNumberTuple<Num1Rest, [], AddWithCarry<Num1Last, 0, _Carry>["carry"]>
 			}${
 				// compute one digit
 				AddWithCarry<Num1Last, 0, _Carry>["digit"]
@@ -169,7 +173,7 @@ type AddReversed<Num1 extends number[], Num2 extends number[], _Carry extends nu
 		// Num2 has digits, Num1 is empty
 		`${
 			// recursive call to compute rest of digits
-			AddReversed<[], Num2Rest, AddWithCarry<0, Num2Last, _Carry>["carry"]>
+			AddNumberTuple<[], Num2Rest, AddWithCarry<0, Num2Last, _Carry>["carry"]>
 		}${
 			// compute one digit
 			AddWithCarry<0, Num2Last, _Carry>["digit"]
@@ -177,16 +181,16 @@ type AddReversed<Num1 extends number[], Num2 extends number[], _Carry extends nu
 	:	// both Num1 and Num2 are empty
 		`${_Carry extends 0 ? "" : _Carry}`;
 
-type StringToNumberArray<S extends string> =
-	S extends `${infer F extends number}${infer R}` ? [F, ...StringToNumberArray<R>] : [];
+type StringToNumberTuple<S extends string> =
+	S extends `${infer F extends number}${infer R}` ? [F, ...StringToNumberTuple<R>] : [];
 
 export type Add<T1 extends number, T2 extends number> = ParseNumber<
-	AddReversed<StringToNumberArray<`${T1}`>, StringToNumberArray<`${T2}`>>
+	AddNumberTuple<StringToNumberTuple<`${T1}`>, StringToNumberTuple<`${T2}`>>
 >;
 
 type DebugAddWithCarry = AddWithCarry<9, 8, 5>;
 //   ^?
-type DebugAddReversed = AddReversed<[9, 9, 9], [9]>;
+type DebugAddReversed = AddNumberTuple<[9, 9, 9], [9]>;
 //   ^?
 type DebugAdd = Add<999, 9999>;
 //   ^?
