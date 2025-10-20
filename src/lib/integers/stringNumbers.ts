@@ -121,14 +121,13 @@ export type AddWithoutCarry = [
 	],
 ];
 /*
-Carry In	5
-D1			9
-D2			8
-D1 + D2	   17
-D1 + D2 + C22
-Result 		8
-Carry Out	1
-
+Carry In	  | 5
+D1			  | 9
+D2			  | 8
+D1 + D	      | 17
+D1 + D2 + C   | 22
+Result 		  | 2
+Carry Out	  | 2
 */
 
 type NumberWithCarry = { carry: number; digit: number };
@@ -145,13 +144,7 @@ export type AddWithCarry<
 	digit: _D1plusD2plusCarryIn["digit"];
 };
 
-type ReverseString<T extends string> =
-	T extends `${infer F}${infer R}` ? `${ReverseString<R>}${F}` : T;
-
 type ParseNumber<T extends string> = T extends `${infer N extends number}` ? N : never;
-
-type SplitIntoNumberAndRest<T extends string> =
-	T extends `${infer F extends number}${infer R}` ? [F, R] : [0, ""];
 
 type AddReversed<Num1 extends number[], Num2 extends number[], _Carry extends number = 0> =
 	Num1 extends [...infer Num1Rest extends number[], infer Num1Last extends number] ?
@@ -191,7 +184,7 @@ export type Add<T1 extends number, T2 extends number> = ParseNumber<
 	AddReversed<StringToNumberArray<`${T1}`>, StringToNumberArray<`${T2}`>>
 >;
 
-type DebugAddWithCarry = AddWithCarry<9, 1, 1>;
+type DebugAddWithCarry = AddWithCarry<9, 8, 5>;
 //   ^?
 type DebugAddReversed = AddReversed<[9, 9, 9], [9]>;
 //   ^?
