@@ -1,11 +1,11 @@
 import { CreateZeroesTuple } from "./zeroTuples";
 
-export type Integer<Sign extends "+" | "-", N extends number> = {
+export type IntegerT<Sign extends "+" | "-", N extends number> = {
 	number: CreateZeroesTuple<N>;
 	sign: Sign;
 };
 
-export type AnyInteger = {
+export type AnyIntegerT = {
 	number: number[];
 	sign: "+" | "-";
 };
